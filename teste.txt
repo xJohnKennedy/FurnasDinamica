@@ -1,0 +1,22 @@
+# Autores: Jonathas Kennedy Alves Pereira / Phablo Veríssimo Inácio Dias
+# Data: 12/02/2022 
+# Assunto: modelo de arquivo de configuração de radier estaqueado
+
+titulo = "Radier Estaqueado"
+
+# dados de geometria / Dimensões em centímetros
+[geometria]
+
+    diam_base = 2220    # diametro da base do radier
+    diam_topo = 900     # diametro do topo do radier
+    h_base = 50         # altura da base
+    h_cone = 350        # altura do tronco de cone
+    h_topo = 25         # altura do topo
+
+#dados referentes a geometria das estacas / Dimensões em centímetros
+[estacas]
+
+    num_est  =  15      # numero de estacas
+    diam_est =  30      # diametro das estacas
+    h_est    =  712     # altura das estacas
+    cob_est  =  200     # distancia da face de concreto ao eixo das estacas

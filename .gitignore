@@ -1,0 +1,15 @@
+*.vtu
+.venv/**
+.vscode/**
+*.msh
+*.vtk
+*.geo
+*.inp
+*.dat
+*.out
+*.fbd
+*.frd
+*.sta
+*.pvd
+*.m
+*.cvg
