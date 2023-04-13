@@ -20,3 +20,10 @@ titulo = "Radier Estaqueado"
     diam_est =  30      # diametro das estacas
     h_est    =  712     # altura das estacas
     cob_est  =  200     # distancia da face de concreto ao eixo das estacas
+	
+	
+#dados referentes aos carregamentos / Dimensões em centímetros
+[cargas]
+
+    num_cargas  =  12      # numero de pontos de carregamentos aplicados no bloco na parte superior
+    diam_carga 	=  300      # diametro  do circulo de distribuição das cargas

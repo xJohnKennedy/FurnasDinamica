@@ -3,12 +3,25 @@ import toml
 import os
 import math
 import ccx2paraview
+import numpy
 
 
 def adiciona_cone(arquivo, tag: integer,  x0, y0, z0, dx, dy, dz, r0, r1):
     # definicao do tronco de cone:
     arquivo.append('Cone(%i) = {%f, %f, %f, %f, %f, %f, %f, %f};'
                    % (tag,  x0, y0, z0, dx, dy, dz, r0, r1))
+    pass
+
+
+def cria_pontos_cargas(arquivo,  x0, y0, z0, r0, num_points):
+    # distribuição dos pontos de aplicacao das cargas sobre um circulo:
+    num_div = 2 * numpy.pi / num_points
+    for i in range(0, num_points):
+        dy = r0 * numpy.cos(i*num_div)
+        dz = r0 * numpy.sin(i*num_div)
+        arquivo.append('Point(%i) = {%f, %f, %f};'
+                       % (i + 1, x0, dy + y0, dz + z0))
+        pass
     pass
 
 
@@ -42,6 +55,13 @@ def grava_geo(nome_arquivo, dados_txt):
     D_topo = dados_txt['geometria']['diam_topo'] / 100
     h_topo = dados_txt['geometria']['h_topo'] / 100
 
+    num_cargas = dados_txt['cargas']['num_cargas']
+    diam_circ_carga = dados_txt['cargas']['diam_carga']/100
+
+    # definicao dos pontos de aplicação do carregamento:
+    cria_pontos_cargas(arquivo, h_base + h_cone + h_topo,
+                       0, 0, diam_circ_carga/2, num_cargas)
+
     # definicao do tronco de cone:
     adiciona_cone(arquivo, 1, h_base, 0, 0, h_cone, 0, 0, D_base/2, D_topo/2)
 
@@ -49,6 +69,10 @@ def grava_geo(nome_arquivo, dados_txt):
     adiciona_cilindro(arquivo, 2,  0, 0, 0, h_base, 0, 0, D_base/2)
 
     adiciona_cilindro(arquivo, 3,  h_base+h_cone, 0, 0, h_topo, 0, 0, D_topo/2)
+
+    # adiciona pontos de cargas na geometria
+    arquivo.append('Point{%i : %i} In Surface {%i};' % (1, num_cargas, 8))
+    arquivo.append('Point{%i : %i} In Volume {%i};' % (1, num_cargas, 3))
 
     arquivo.append('Physical Volume ("bloco01") = {1,2,3};')
 
