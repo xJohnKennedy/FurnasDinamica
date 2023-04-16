@@ -200,6 +200,16 @@ NLatEstacas,1 , 3, 0
     arquivo.append("""** gravacao dos resultados
 *node file
 U
+*end step
+""" % ())
+
+    arquivo.append("""** carregamento peso proprio
+*step
+*static
+*DLOAD
+Eall,GRAV,9.81,-1.,0.,0.
+""" % ())
+    arquivo.append("""** gravacao dos resultados
 *el file
 S
 *end step

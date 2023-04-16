@@ -13,3 +13,5 @@
 *.pvd
 *.m
 *.cvg
+/*.eig
+/PULAR.txt
