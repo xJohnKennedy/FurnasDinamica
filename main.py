@@ -182,6 +182,26 @@ def grava_solver(nome_arquivo: str, dados_txt):
 *boundary
 NLatEstacas,1 , 3, 0
 """ % ())
+
+    arquivo.append("""** pontos de aplicacao do carregamento dinamico
+*NSET,NSET=NOS_CARGA
+14340, 14361, 14367, 14403, 14652
+**
+** pontos de leitura do carregamento dinamico
+*NSET,NSET=NO_DESLOC_CENTRO
+8591
+
+
+
+*Amplitude, name=Amp-1
+**
+** LER UM ARQUIVO EXTERNO (t, f(t))
+**
+*include,input=PULAR.txt
+**
+
+""" % ())
+
     arquivo.append("""** definicao do material
 *material, name=steel
 *elastic
@@ -213,6 +233,19 @@ Eall,GRAV,9.81,-1.,0.,0.
 *el file
 S
 *end step
+""" % ())
+
+    arquivo.append("""** calculo dinamico - vibracao forcada
+*STEP, INC=20
+*MODAL DYNAMIC,SOLVER=ITERATIVE SCALING
+1.E-5,10
+*CLOAD,AMPLITUDE=Amp-1
+NOS_CARGA, 2, -1.
+*NODE PRINT,NSET=NO_DESLOC_CENTRO
+U
+*EL PRINT,ELSET=Eall,TOTALS=ONLY
+ELSE,ELKE,EVOL
+*END STEP
 """ % ())
 
     with open(nome_arquivo + '_solve.inp', 'w') as file_out:
