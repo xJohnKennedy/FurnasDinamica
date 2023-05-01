@@ -169,11 +169,12 @@ ulin gmsh without virtual topology
 zap +CPS3
 # salva definicoes de malha e condicoes de contorno
 send all abq
-send LatEstacas abq
 send nos_carga abq
+send LatEstacas abq
+
 
 # solve
-sys ccx %s_solve
+sys bash -i -c ccx %s_solve
 
 """ % (nome_arquivo, nome_arquivo))
 
