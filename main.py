@@ -126,9 +126,9 @@ def grava_geo(nome_arquivo, dados_txt):
         """//make all interfaces conformal
         b() = BooleanFragments{ Physical Volume {1}; Delete; }{ Physical Volume {2}; Delete; };
         Physical Volume (\"bloco\") = {b()};
-        Mesh.MeshSizeFactor = 0.1;
+        Mesh.MeshSizeFactor = %f;
         Mesh 3;
-        Save \"%s_mesh.inp\";""" % (nome_arquivo))
+        Save \"%s_mesh.inp\";""" % (dados_txt['geral']['MeshSizeFactor'], nome_arquivo))
 
     with open(nome_arquivo + '.geo', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
@@ -145,12 +145,18 @@ def executa_cgx(nome_arquivo):
     if os.name == 'nt':
         comando = "cmd /c \"C:\\Program Files (x86)\\bConverged\\common\\site\\cmdStartup_mod.bat\" cgx -bg % s" % (
             nome_arquivo)
+        os.system(comando)
         pass
     elif os.name == 'posix':
         comando = "bash -i -c cgx -bg % s" % (
             nome_arquivo)
+        os.system(comando)
+
+        comando = "bash -i -c ccx %s_solve" % (
+            nome_arquivo)
+        os.system(comando)
+
         pass
-    os.system(comando)
     pass
 
 
@@ -169,13 +175,18 @@ ulin gmsh without virtual topology
 zap +CPS3
 # salva definicoes de malha e condicoes de contorno
 send all abq
-send LatEstacas abq
 send nos_carga abq
+send LatEstacas abq
 
+""" % (nome_arquivo, nome_arquivo))
+
+    if os.name == 'nt':
+        arquivo.append("""
 # solve
 sys ccx %s_solve
 
-""" % (nome_arquivo, nome_arquivo))
+""" % (nome_arquivo))
+        pass
 
     with open(nome_arquivo + '.fbd', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
@@ -210,7 +221,7 @@ NLatEstacas,1 , 3, 0
 
     arquivo.append("""** frequencia natural
 *step
-*frequency,solver=arpack
+*frequency,solver=arpack,storage=yes
 %d""" % (dados_txt['freq_natural']['num_modos']))
 
     menor_freq = dados_txt['freq_natural']['menor_freq']
@@ -235,7 +246,7 @@ U
 *static
 *DLOAD
 Eall,GRAV,%.3f,-1.,0.,0.
-""" % (dados_txt['PP']['gravidade']))
+""" % (dados_txt['geral']['gravidade']))
 
     arquivo.append("""** gravacao dos resultados
 *el file

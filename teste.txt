@@ -37,19 +37,21 @@ titulo = "Radier Estaqueado"
 # ---------------- DADOS PARA ANALISE ----------------- #
 # ----------------------------------------------------- #
 
-# ------------------- peso proprio -------------------- #
+# ----------------------- gerais ---------------------- #
 # ----------------------------------------------------- #
-[PP]
-    gravidade = 9.81          # aceleração da gravidade m/s²
+[geral]
+    gravidade = 9.81             # aceleração da gravidade m/s²
+    MeshSizeFactor = 1           # multiplicador geral do tamanho da malha
+
 
 # ------------------ vibração livre ------------------- #
 # ----------------------------------------------------- #
 [freq_natural]
 
-    num_modos = 50          # numero de modos para calcular
+    num_modos = 10          # numero de modos para calcular
     #
     # nos criterios abaixo, preencher 0 se deseja utilizar os valores 'default' 
-    menor_freq = 0          # menor frequencia natural desejada em rad/s
+    menor_freq = 0        # menor frequencia natural desejada em rad/s
     maior_freq = 0          # maior frequencia natural desejada em rad/s
 
 
