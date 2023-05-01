@@ -126,6 +126,7 @@ def grava_geo(nome_arquivo, dados_txt):
         """//make all interfaces conformal
         b() = BooleanFragments{ Physical Volume {1}; Delete; }{ Physical Volume {2}; Delete; };
         Physical Volume (\"bloco\") = {b()};
+        Mesh.MeshSizeFactor = 0.1;
         Mesh 3;
         Save \"%s_mesh.inp\";""" % (nome_arquivo))
 
