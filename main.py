@@ -19,8 +19,8 @@ def cria_pontos_cargas(arquivo,  x0, y0, z0, r0, num_points):
     for i in range(0, num_points):
         dy = r0 * numpy.cos(i*num_div)
         dz = r0 * numpy.sin(i*num_div)
-        arquivo.append('Point(%i) = {%f, %f, %f};'
-                       % (i + 1, x0, dy + y0, dz + z0))
+        arquivo.append('Point(%i) = {%f, %f, %f};   // ponto %d aplicacao carga'
+                       % (i + 1, x0, dy + y0, dz + z0, i + 1))
         pass
     pass
 
@@ -74,6 +74,8 @@ def grava_geo(nome_arquivo, dados_txt):
     arquivo.append('Point{%i : %i} In Surface {%i};' % (1, num_cargas, 8))
     arquivo.append('Point{%i : %i} In Volume {%i};' % (1, num_cargas, 3))
 
+    arquivo.append(
+        'Physical Point ("nos_carga") = {%i : %i};' % (1, num_cargas))
     arquivo.append('Physical Volume ("bloco01") = {1,2,3};')
 
     # definicao das estacas
@@ -139,8 +141,14 @@ def executa_gmsh(nome_arquivo):
 
 
 def executa_cgx(nome_arquivo):
-    comando = "cmd /c \"C:\\Program Files (x86)\\bConverged\\common\\site\\cmdStartup_mod.bat\" cgx -b % s" % (
-        nome_arquivo)
+    if os.name == 'nt':
+        comando = "cmd /c \"C:\\Program Files (x86)\\bConverged\\common\\site\\cmdStartup_mod.bat\" cgx -bg % s" % (
+            nome_arquivo)
+        pass
+    elif os.name == 'posix':
+        comando = "bash -i -c cgx -bg % s" % (
+            nome_arquivo)
+        pass
     os.system(comando)
     pass
 
@@ -161,9 +169,12 @@ zap +CPS3
 # salva definicoes de malha e condicoes de contorno
 send all abq
 send LatEstacas abq
+send nos_carga abq
 
 # solve
-sys ccx %s_solve""" % (nome_arquivo, nome_arquivo))
+sys ccx %s_solve
+
+""" % (nome_arquivo, nome_arquivo))
 
     with open(nome_arquivo + '.fbd', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
@@ -176,47 +187,42 @@ def grava_solver(nome_arquivo: str, dados_txt):
     arquivo = [
         """// ================== RADIER EM TRONCO DE CONE COM %i ESTACAS =========================
 *include,input=%s.msh
-*include,input=%s.msh""" % (dados_txt['estacas']["num_est"], 'all', 'LatEstacas')]
+*include,input=%s.msh
+""" % (dados_txt['estacas']["num_est"], 'all', 'LatEstacas')]
 
     arquivo.append("""** condicoes de contorno
 *boundary
 NLatEstacas,1 , 3, 0
 """ % ())
 
-    arquivo.append("""** pontos de aplicacao do carregamento dinamico
-*NSET,NSET=NOS_CARGA
-14340, 14361, 14367, 14403, 14652
-**
-** pontos de leitura do carregamento dinamico
-*NSET,NSET=NO_DESLOC_CENTRO
-8591
-
-
-
-*Amplitude, name=Amp-1
-**
-** LER UM ARQUIVO EXTERNO (t, f(t))
-**
-*include,input=PULAR.txt
-**
-
-""" % ())
-
     arquivo.append("""** definicao do material
-*material, name=steel
+*material, name=mat_radier
 *elastic
-210000e6,0.3,0
+%e,%e,0
 *density
-7800""" % ())
+%e
+""" % (dados_txt['geometria']['mod_E'], dados_txt['geometria']['poi'], dados_txt['geometria']['den']))
 
     arquivo.append("""** aplicacao do material
-*solid section, elset=Eall, material=steel""" % ())
+*solid section, elset=Eall, material=mat_radier
+""" % ())
 
     arquivo.append("""** frequencia natural
 *step
 *frequency,solver=arpack
-10,0.01
-""" % ())
+%d""" % (dados_txt['freq_natural']['num_modos']))
+
+    menor_freq = dados_txt['freq_natural']['menor_freq']
+    maior_freq = dados_txt['freq_natural']['maior_freq']
+
+    if (menor_freq == 0) and (maior_freq == 0):
+        arquivo.append(arquivo.pop() + """\n""" % ())
+    elif ((maior_freq == 0)):
+        arquivo.append(arquivo.pop() + (""",%.2f\n""" % (menor_freq)))
+    else:
+        arquivo.append(arquivo.pop() + (""",%.2f,%.2f\n""" %
+                       (menor_freq, maior_freq)))
+
     arquivo.append("""** gravacao dos resultados
 *node file
 U
@@ -227,26 +233,45 @@ U
 *step
 *static
 *DLOAD
-Eall,GRAV,9.81,-1.,0.,0.
-""" % ())
+Eall,GRAV,%.3f,-1.,0.,0.
+""" % (dados_txt['PP']['gravidade']))
+
     arquivo.append("""** gravacao dos resultados
 *el file
 S
 *end step
 """ % ())
 
+    arquivo.append("""** pontos de aplicacao do carregamento dinamico
+*include,input=nos_carga.msh
+**
+** pontos de leitura do carregamento dinamico
+*NSET,NSET=NO_DESLOC_CENTRO
+8591
+""")
+    arquivo.append("""*Amplitude, name=%s
+**
+** LER UM ARQUIVO EXTERNO (t, f(t))
+**
+*include,input=%s
+**
+
+""" % (dados_txt['cargas']['car_arq_0'], dados_txt['cargas']['car_arq_0']))
+
     arquivo.append("""** calculo dinamico - vibracao forcada
 *STEP, INC=20
 *MODAL DYNAMIC,SOLVER=ITERATIVE SCALING
 1.E-5,10
-*CLOAD,AMPLITUDE=Amp-1
-NOS_CARGA, 2, -1.
-*NODE PRINT,NSET=NO_DESLOC_CENTRO
+*MODAL DAMPING
+1,10, 0.02
+*CLOAD,AMPLITUDE=%s
+Nnos_carga, 2, -1.
+*NODE FILE,NSET=NO_DESLOC_CENTRO
 U
-*EL PRINT,ELSET=Eall,TOTALS=ONLY
+*EL FILE,ELSET=Eall,TOTALS=ONLY
 ELSE,ELKE,EVOL
 *END STEP
-""" % ())
+""" % (dados_txt['cargas']['car_arq_0']))
 
     with open(nome_arquivo + '_solve.inp', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))

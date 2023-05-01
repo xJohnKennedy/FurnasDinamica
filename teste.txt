@@ -1,29 +1,69 @@
+# Documento formatado em TOML
+# https://toml.io/en/
+#
 # Autores: Jonathas Kennedy Alves Pereira / Phablo Veríssimo Inácio Dias
 # Data: 12/02/2022 
 # Assunto: modelo de arquivo de configuração de radier estaqueado
 
 titulo = "Radier Estaqueado"
 
-# dados de geometria / Dimensões em centímetros
+# ----------------------------------------------------- #
+# ------------------ DADOS DO RADIER ------------------ #
+# ----------------------------------------------------- #
 [geometria]
 
-    diam_base = 2220    # diametro da base do radier
-    diam_topo = 900     # diametro do topo do radier
-    h_base = 50         # altura da base
-    h_cone = 350        # altura do tronco de cone
-    h_topo = 25         # altura do topo
+    diam_base = 2220            # diametro da base do radier (cm)
+    diam_topo = 900             # diametro do topo do radier (cm)
+    h_base = 50                 # altura da base (cm)
+    h_cone = 350                # altura do tronco de cone (cm)
+    h_topo = 25                 # altura do topo (cm)
 
-#dados referentes a geometria das estacas / Dimensões em centímetros
+    mod_E = 210000e6            # modulo de elasticidade (Pa)
+    poi = 0.3                   # coeficiente de Poisson
+    den = 7800                  # densidade (kg/m³)
+
+
+# ------ dados referentes a geometria das estacas ----- #
+# ----------------------------------------------------- #
 [estacas]
 
     num_est  =  15      # numero de estacas
-    diam_est =  30      # diametro das estacas
-    h_est    =  712     # altura das estacas
-    cob_est  =  200     # distancia da face de concreto ao eixo das estacas
+    diam_est =  30      # diametro das estacas (cm)
+    h_est    =  712     # altura das estacas (cm)
+    cob_est  =  200     # distancia da face de concreto ao eixo das estacas (cm)
 	
-	
-#dados referentes aos carregamentos / Dimensões em centímetros
+
+# ----------------------------------------------------- #
+# ---------------- DADOS PARA ANALISE ----------------- #
+# ----------------------------------------------------- #
+
+# ------------------- peso proprio -------------------- #
+# ----------------------------------------------------- #
+[PP]
+    gravidade = 9.81          # aceleração da gravidade m/s²
+
+# ------------------ vibração livre ------------------- #
+# ----------------------------------------------------- #
+[freq_natural]
+
+    num_modos = 50          # numero de modos para calcular
+    #
+    # nos criterios abaixo, preencher 0 se deseja utilizar os valores 'default' 
+    menor_freq = 0          # menor frequencia natural desejada em rad/s
+    maior_freq = 0          # maior frequencia natural desejada em rad/s
+
+
+# ----------------- vibração forçada ------------------ #
+# --------- dados referentes aos carregamentos -------- #
+# ----------------------------------------------------- #	
 [cargas]
 
-    num_cargas  =  12      # numero de pontos de carregamentos aplicados no bloco na parte superior
-    diam_carga 	=  300      # diametro  do circulo de distribuição das cargas
+    num_cargas  =  12           # numero de pontos de carregamentos aplicados no bloco na parte superior
+    diam_carga 	=  300          # diametro  do circulo de distribuição das cargas (cm)
+
+    # arquivos de leitura de carregamentos para vibração forçada
+    # car_arq_0 tem predominância sobre outros carregamentos
+    # para desativar fazer car_arq_0 = 0
+    
+    car_arq_0 = "PULAR.txt"    
+    car_arq_1 = 0  
