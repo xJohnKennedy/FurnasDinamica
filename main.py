@@ -151,11 +151,6 @@ def executa_cgx(nome_arquivo):
         comando = "bash -i -c cgx -bg % s" % (
             nome_arquivo)
         os.system(comando)
-
-        comando = "bash -i -c ccx %s_solve" % (
-            nome_arquivo)
-        os.system(comando)
-
         pass
     pass
 
@@ -184,6 +179,13 @@ send LatEstacas abq
         arquivo.append("""
 # solve
 sys ccx %s_solve
+
+""" % (nome_arquivo))
+
+    if os.name == 'posix':
+        arquivo.append("""
+# solve
+sys ccx_2.19_MT %s_solve
 
 """ % (nome_arquivo))
 
