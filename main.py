@@ -178,7 +178,7 @@ send all abq
 send nos_carga abq
 send LatEstacas abq
 
-""" % (nome_arquivo, nome_arquivo))
+""" % (nome_arquivo))
 
     if os.name == 'nt':
         arquivo.append("""
@@ -270,19 +270,22 @@ S
 """ % (dados_txt['cargas']['car_arq_0'], dados_txt['cargas']['car_arq_0']))
 
     arquivo.append("""** calculo dinamico - vibracao forcada
-*STEP, INC=20
+*STEP, INC=%d
 *MODAL DYNAMIC,SOLVER=ITERATIVE SCALING
-1.E-5,10
+%e,%f
 *MODAL DAMPING
-1,10, 0.02
+1,%d, 0.02
 *CLOAD,AMPLITUDE=%s
-Nnos_carga, 2, -1.
+Nnos_carga, 1, -1.
 *NODE FILE,NSET=NO_DESLOC_CENTRO
 U
 *EL FILE,ELSET=Eall,TOTALS=ONLY
 ELSE,ELKE,EVOL
 *END STEP
-""" % (dados_txt['cargas']['car_arq_0']))
+""" % (dados_txt['cargas']['tempo_final'] / dados_txt['cargas']['incremento_tempo'] + 1,
+       dados_txt['cargas']['incremento_tempo'], dados_txt['cargas']['tempo_final'],
+        dados_txt['freq_natural']['num_modos'],
+        dados_txt['cargas']['car_arq_0']))
 
     with open(nome_arquivo + '_solve.inp', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))

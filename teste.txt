@@ -62,6 +62,8 @@ titulo = "Radier Estaqueado"
 
     num_cargas  =  12           # numero de pontos de carregamentos aplicados no bloco na parte superior
     diam_carga 	=  300          # diametro  do circulo de distribuição das cargas (cm)
+    incremento_tempo = 1e-3
+    tempo_final = 2
 
     # arquivos de leitura de carregamentos para vibração forçada
     # car_arq_0 tem predominância sobre outros carregamentos
