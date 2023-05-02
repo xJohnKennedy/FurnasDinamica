@@ -148,7 +148,7 @@ def executa_cgx(nome_arquivo):
         os.system(comando)
         pass
     elif os.name == 'posix':
-        comando = "bash -i -c cgx -bg % s" % (
+        comando = "cgx -bg % s" % (
             nome_arquivo)
         os.system(comando)
         pass

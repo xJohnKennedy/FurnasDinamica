@@ -51,7 +51,7 @@ titulo = "Radier Estaqueado"
     num_modos = 10          # numero de modos para calcular
     #
     # nos criterios abaixo, preencher 0 se deseja utilizar os valores 'default' 
-    menor_freq = 0        # menor frequencia natural desejada em rad/s
+    menor_freq = 1e-5       # menor frequencia natural desejada em rad/s
     maior_freq = 0          # maior frequencia natural desejada em rad/s
 
 
@@ -63,7 +63,7 @@ titulo = "Radier Estaqueado"
     num_cargas  =  12           # numero de pontos de carregamentos aplicados no bloco na parte superior
     diam_carga 	=  300          # diametro  do circulo de distribuição das cargas (cm)
     incremento_tempo = 1e-3
-    tempo_final = 2
+    tempo_final = 10e-3
 
     # arquivos de leitura de carregamentos para vibração forçada
     # car_arq_0 tem predominância sobre outros carregamentos
