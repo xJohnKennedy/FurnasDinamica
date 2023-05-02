@@ -183,7 +183,7 @@ send LatEstacas abq
     if os.name == 'nt':
         arquivo.append("""
 # solve
-sys ccx %s_solve
+sys bash -i -c ccx %s_solve
 
 """ % (nome_arquivo))
         pass
