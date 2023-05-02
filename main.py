@@ -183,10 +183,9 @@ send LatEstacas abq
     if os.name == 'nt':
         arquivo.append("""
 # solve
-sys bash -i -c ccx %s_solve
+sys ccx %s_solve
 
 """ % (nome_arquivo))
-        pass
 
     with open(nome_arquivo + '.fbd', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
