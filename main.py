@@ -139,10 +139,10 @@ def grava_geo(nome_arquivo, dados_txt):
 
 
 def executa_gmsh(nome_arquivo, dados_txt):
-    os.system("gmsh %s -clmin %f -clmax %f -clscale %f" % (nome_arquivo,
-                                                           dados_txt['geral']['MalhaMin'],
-                                                           dados_txt['geral']['MalhaMax'],
-                                                           dados_txt['geral']['FatorDeMalha']))
+    os.system("gmsh %s -clmin %f -clmax %f -clscale %f -" % (nome_arquivo,
+                                                             dados_txt['geral']['MalhaMin'],
+                                                             dados_txt['geral']['MalhaMax'],
+                                                             dados_txt['geral']['FatorDeMalha']))
     pass
 
 
@@ -153,7 +153,7 @@ def executa_cgx(nome_arquivo):
         os.system(comando)
         pass
     elif os.name == 'posix':
-        comando = "cgx -bg % s" % (
+        comando = "cgx_2.20.1 -bg % s" % (
             nome_arquivo)
         os.system(comando)
         pass
@@ -329,7 +329,7 @@ def main_func():
     nome_arquivo = nome_arquivo[:index]
 
     grava_geo(nome_arquivo, dados_txt)
-    executa_gmsh(nome_arquivo + '.geo')
+    executa_gmsh(nome_arquivo + '.geo', dados_txt)
     grava_fbd(nome_arquivo, dados_txt)
     grava_solver(nome_arquivo, dados_txt)
     executa_cgx(nome_arquivo + '.fbd')
