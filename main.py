@@ -127,7 +127,7 @@ def grava_geo(nome_arquivo, dados_txt):
         b() = BooleanFragments{ Volume {1:3}; Delete; }{ Volume {%d:%d}; Delete; };
         Physical Volume (\"bloco\") = {b()};
         Point{%i : %i} In Surface {%i};
-        MeshSize {b()} = %f;
+        MeshSize {:} = %f;
         Mesh 3;
         Save \"%s_mesh.inp\";""" % (4, cont_estq-1, 1, num_cargas, 61,
                                     dados_txt['geral']['TamanhoMalha'], nome_arquivo))
@@ -138,8 +138,11 @@ def grava_geo(nome_arquivo, dados_txt):
     pass
 
 
-def executa_gmsh(nome_arquivo):
-    os.system("gmsh %s -" % (nome_arquivo))
+def executa_gmsh(nome_arquivo, dados_txt):
+    os.system("gmsh %s -clmin %f -clmax %f -clscale %f" % (nome_arquivo,
+                                                           dados_txt['geral']['MalhaMin'],
+                                                           dados_txt['geral']['MalhaMax'],
+                                                           dados_txt['geral']['FatorDeMalha']))
     pass
 
 
