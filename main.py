@@ -128,6 +128,9 @@ def grava_geo(nome_arquivo, dados_txt):
         Physical Volume (\"bloco\") = {b()};
         Point{%i : %i} In Surface {%i};
         MeshSize {:} = %f;
+        Mesh.SaveAll=1;
+        Mesh.SaveGroupsOfElements = 1;
+        Mesh.SaveGroupsOfNodes = 1;
         Mesh 3;
         Save \"%s_mesh.inp\";""" % (4, cont_estq-1, 1, num_cargas, 61,
                                     dados_txt['geral']['TamanhoMalha'], nome_arquivo))
@@ -171,6 +174,8 @@ def grava_fbd(nome_arquivo: str, dados_txt):
     arquivo.append("""#
 read %s_mesh.inp
 ulin gmsh without virtual topology
+# remove elementos de barra
+zap +T3D2
 # remove elementos de superficie
 zap +CPS3
 # salva definicoes de malha e condicoes de contorno
