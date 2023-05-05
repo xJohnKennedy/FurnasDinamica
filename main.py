@@ -71,11 +71,11 @@ def grava_geo(nome_arquivo, dados_txt):
     adiciona_cilindro(arquivo, 3,  h_base+h_cone, 0, 0, h_topo, 0, 0, D_topo/2)
 
     # adiciona pontos de cargas na geometria
-    arquivo.append('Point{%i : %i} In Surface {%i};' % (1, num_cargas, 8))
-    arquivo.append('Point{%i : %i} In Volume {%i};' % (1, num_cargas, 3))
+    arquivo.append('//Point{%i : %i} In Surface {%i};' % (1, num_cargas, 8))
+    arquivo.append('//Point{%i : %i} In Volume {%i};' % (1, num_cargas, 3))
 
     arquivo.append(
-        'Physical Point ("nos_carga") = {%i : %i};' % (1, num_cargas))
+        'Physical Point ("nos_carga") = {%d : %d};' % (1, num_cargas))
     arquivo.append('Physical Volume ("bloco01") = {1,2,3};')
 
     # definicao das estacas
@@ -124,11 +124,13 @@ def grava_geo(nome_arquivo, dados_txt):
 
     arquivo.append(
         """//make all interfaces conformal
-        b() = BooleanFragments{ Physical Volume {1}; Delete; }{ Physical Volume {2}; Delete; };
+        b() = BooleanFragments{ Volume {1:3}; Delete; }{ Volume {%d:%d}; Delete; };
         Physical Volume (\"bloco\") = {b()};
-        Mesh.MeshSizeFactor = %f;
+        Point{%i : %i} In Surface {%i};
+        MeshSize {b()} = %f;
         Mesh 3;
-        Save \"%s_mesh.inp\";""" % (dados_txt['geral']['MeshSizeFactor'], nome_arquivo))
+        Save \"%s_mesh.inp\";""" % (4, cont_estq-1, 1, num_cargas, 61,
+                                    dados_txt['geral']['TamanhoMalha'], nome_arquivo))
 
     with open(nome_arquivo + '.geo', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
@@ -171,6 +173,7 @@ zap +CPS3
 # salva definicoes de malha e condicoes de contorno
 send all abq
 send nos_carga abq
+send nos_carga lst
 send LatEstacas abq
 
 """ % (nome_arquivo))
@@ -202,6 +205,14 @@ def grava_solver(nome_arquivo: str, dados_txt):
 *include,input=%s.msh
 *include,input=%s.msh
 """ % (dados_txt['estacas']["num_est"], 'all', 'LatEstacas')]
+
+    arquivo.append("""** pontos de aplicacao do carregamento dinamico
+*include,input=nos_carga.msh
+**
+** pontos de leitura do carregamento dinamico
+*NSET,NSET=NO_DESLOC_CENTRO
+8591
+""")
 
     arquivo.append("""** condicoes de contorno
 *boundary
@@ -255,13 +266,6 @@ S
 *end step
 """ % ())
 
-    arquivo.append("""** pontos de aplicacao do carregamento dinamico
-*include,input=nos_carga.msh
-**
-** pontos de leitura do carregamento dinamico
-*NSET,NSET=NO_DESLOC_CENTRO
-8591
-""")
     arquivo.append("""*Amplitude, name=%s
 **
 ** LER UM ARQUIVO EXTERNO (t, f(t))
@@ -279,7 +283,7 @@ S
 1,%d, 0.02
 *CLOAD,AMPLITUDE=%s
 Nnos_carga, 1, -1.
-*NODE FILE,NSET=NO_DESLOC_CENTRO
+*NODE FILE,NSET=Nall
 U
 *EL FILE,ELSET=Eall,TOTALS=ONLY
 ELSE,ELKE,EVOL

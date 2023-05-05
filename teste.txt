@@ -40,8 +40,11 @@ titulo = "Radier Estaqueado"
 # ----------------------- gerais ---------------------- #
 # ----------------------------------------------------- #
 [geral]
-    gravidade = 9.81             # aceleração da gravidade m/s²
-    MeshSizeFactor = 1           # multiplicador geral do tamanho da malha
+    gravidade = 9.81            # aceleração da gravidade m/s²
+    FatorDeMalha = 1           	# multiplicador geral do tamanho da malha
+    TamanhoMalha = 0.4
+	MalhaMin = 0.4
+	MalhaMax = 0.4
 
 
 # ------------------ vibração livre ------------------- #
