@@ -1,0 +1,344 @@
+#!/usr/bin/perl
+
+# USAGE: Install CalculiX
+#       perl install
+#
+# Need help? Send an email from https://www.feacluster.com/ctact.php
+
+# Todo: Check is massless.c changes are needed in $version
+
+$version = '2.20';
+
+##################
+
+sub tried_download {
+
+print "\nBefore installing, first try and download the pre-built executable with Intel's Pardiso solver from here:
+
+https://www.feacluster.com/calculix.php#3
+
+It should work on most x86_64 systems. If not, then press (c) to continue:
+\n";
+
+$answer = <STDIN>;
+chomp ( $answer );
+
+if ( $answer !~ /^c$/ ) { print "\n** Print invalid entry **\n"; exit 1; }
+
+} # end sub;
+
+##################
+
+sub which_solver {
+
+print "\nEnter the number for the solver you would like to install:
+
+(1) Spooles ( Not recommended. 2-3X slower than Pardiso and can not solve models with more than a million degrees of freedom )
+(2) Pardiso ( Must have the Intel compiler. If not, it is available for free from Intel.com. Does not require administrative privelages )
+(3) Pardiso MPI ( Same requirements as above, but needs HPC kit also. Only works with v2.18 . Will update it for newer versions if there is interest. ) 
+\n
+";
+
+$solver = <STDIN>;
+chomp ( $solver );
+
+if ( $solver =~ /^(\d)$/ ) { $solver = $1; } else { print "\n** Print invalid entry **\n"; exit 1; }
+if ( $solver > 4 ) {  print "\n** Print invalid entry **\n"; exit 1; }
+
+} # end sub;
+
+################################
+
+sub determine_fortran_compiler {
+
+if ( $solver == 1 ) {
+    $fortran_compiler = `which gfortran`;
+    $fortran_compiler =~ s/.*gfortran/gfortran/;
+} # end if
+
+if ( $solver == 2 ) { 
+$fortran_compiler = `which ifort`;
+if ( $fortran_compiler !~ /ifort/ ) {
+	print "\n**** Intel fortran compiler not installed or configured. If you have already installed it, try sourcing the environment variables.\nIf you have do not have it, then you can download it for free from Intel.com\n\n";
+	exit 1;
+			    }
+	else { $fortran_compiler = 'ifort'; }
+				}
+if ( $solver == 3 ) { 
+
+$version = '2.18';
+
+$fortran_compiler = `which mpiifort`;
+if ( $fortran_compiler !~ /mpiifort/ ) {
+	print "\n**** Intel MPI fortran compiler not installed or configured. If you have already installed it, try sourcing the environment variables.\nIf you have do not have it, then you can download it for free from Intel.com\n\n";
+	exit 1;
+			    }
+	else { $fortran_compiler = 'mpiifort'; }
+				}
+if ( $fortran_compiler !~ /gfortran|ifort|mpiifort/ ) 
+     { print "\n**** gfortran compiler not found! Install by doing as root: 'sudo yum install gcc-gfortran or sudo apt-get install gfortran'\n\n"; exit 1; }
+
+} # end sub
+
+####################
+
+sub determine_cpus {
+
+$cpus = `nproc`;
+chomp ( $cpus );
+if ( $cpus =~ /^(\d+)$/ ) { $cpus = $1; } else { $cpus = 1; }
+
+print "\nWill use $cpus cpus for compiling CalculiX.\nTo override enter the number you would like to use below. Or hit enter to ignore.\n\n";
+
+my $cpus_override = <STDIN>;
+chomp ( $cpus_override );
+if ( $cpus_override =~ /^(\d+)$/ ) { $cpus = $1; }
+
+print "\nProceeding with $cpus cpus for compilation\n\n";
+
+} # end sub
+
+####################
+
+sub download_files {
+
+if ( -e 'ARPACK' ) { print "\nPlease remove folder ARPACK before running this installer\n"; exit 1; }
+if ( -e 'SPOOLES.2.2' ) { print "\nPlease remove folder SPOOLES.2.2 before running this installer\n"; exit 1; }
+if ( -e 'CalculiX' ) { print "\nPlease remove folder CalculiX before running this installer\n"; exit 1; }
+
+if ( ! glob ( 'arpack96.tar*') ) { `wget http://www.feacluster.com/install/src/arpack96.tar.gz`; }
+if ( ! -e 'patch.tar' ) { `wget http://www.feacluster.com/install/src/patch.tar.gz`; }
+if ( ! -e 'spooles.2.2.tar' ) { `wget http://www.feacluster.com/install/src/spooles.2.2.tgz`;}
+if ( ! -e "ccx_$version.src.tar" ) { `wget http://www.dhondt.de/ccx_$version.src.tar.bz2`; }
+if ( ! -e "ccx_$version.test.tar" ) { `wget http://www.dhondt.de/ccx_$version.test.tar.bz2`; }
+if ( ! -e "ccx_$version.SPOOLEScorrection.tar" ) { `wget http://www.dhondt.de/ccx_$version.SPOOLEScorrection.tar.bz2`; }
+if ( ! -e 'Makefile' ) { `wget http://www.feacluster.com/install/src/Makefile`; }
+
+if ( $solver == 3 ) { if ( ! -e 'pardiso_mpi.tar.gz' ) { `wget http://www.feacluster.com/install/src/pardiso_mpi.tar.gz`; } }
+
+} # end sub
+
+#################
+
+sub unzip_files {
+
+print "\n** Unzipping files - may take several seconds **\n\n";
+
+if ( ! -e 'patch.tar' ) { `tar -zxvf patch.tar.gz`; }
+if ( ! -e 'arpack96.tar' ) { `tar -zxvf arpack96.tar.gz`; }
+
+if ( ! -e "ccx_$version.src.tar" ) { `bunzip2 ccx_$version.src.tar.bz2`; }
+if ( ! -e "ccx_$version.test.tar" ) { `bunzip2 ccx_$version.test.tar.bz2`; }
+`tar -xvf ccx_$version.src.tar;tar -xvf ccx_$version.test.tar;`;
+
+$target_dir = "./CalculiX/ccx_$version/src/";
+
+if ( $solver == 3 ) { `mkdir -p $target_dir && tar xvfz pardiso_mpi.tar.gz -C $target_dir`; return; }
+
+if ( ! -e 'spooles.2.2.tar' ) { `gunzip spooles.2.2.tgz`; }
+if ( ! -e "ccx_$version.SPOOLEScorrection.tar" ) { `bunzip2 ccx_$version.SPOOLEScorrection.tar.bz2`; }
+`tar -xvf ccx_$version.SPOOLEScorrection.tar`;
+
+} # end sub
+
+####################
+
+sub arpack_changes {
+
+$pwd = `pwd`;
+chomp ($pwd);
+$pwd =~ s/\//\\\//g;
+$pwd = "$pwd\\/ARPACK";
+
+`perl -i -wpe 's/home \= .*/home \= $pwd/' ARPACK/ARmake.inc`;
+`perl -i -wpe 's/PLAT \= .*/PLAT \= INTEL/' ARPACK/ARmake.inc`;
+`perl -i -wpe 's/FC      \= .*/FC      \= $fortran_compiler/' ARPACK/ARmake.inc`;
+`perl -i -wpe 's/^FFLAGS.*/FFLAGS  \= -O/' ARPACK/ARmake.inc`;
+`perl -i -wpe 's/      EXTERNAL/\*     EXTERNAL/' ARPACK/UTIL/second.f`;
+
+if ( $fortran_compiler =~ /ifort/ ) { 
+`perl -i -wpe 's/^FFLAGS  \= -O/FFLAGS  \= -O -i8/' ARPACK/ARmake.inc`;
+						}
+my $make = `which make`;
+if ( $make =~ /usr/ ) 		{		 
+`perl -i -wpe 's/MAKE    \= .*/MAKE    \= \\/usr\\/bin\\/make/' ARPACK/ARmake.inc`;				}	
+
+} # end sub
+
+##################
+
+sub build_arpack {
+
+print "\n** Building ARPACK - may take several minutes **\n\n";
+system ( 'cd ARPACK;make lib');
+
+} # end sub
+
+##################
+
+sub build_spooles {
+
+print "\n** Building Spooles - may take several minutes **\n\n";
+
+`mkdir SPOOLES.2.2;cp spooles.2.2.tar SPOOLES.2.2/;cd SPOOLES.2.2;tar -xvf spooles.2.2.tar`;
+`cp ./CalculiX/ccx_$version/SPOOLES.2.2/I2Ohash/src/util.c ./SPOOLES.2.2/I2Ohash/src/`;
+`perl -i -wpe 's/drawTree/draw/' SPOOLES.2.2/Tree/src/makeGlobalLib`;
+
+my $ccompiler = `which cc`;
+if ( $ccompiler =~ /cc/ )       {
+`perl -i -wpe 's/^  CC \=.*/  CC \= cc/' SPOOLES.2.2/Make.inc`;
+`perl -i -wpe 's/\#cd MT/\tcd MT/g' SPOOLES.2.2/makefile`;
+                                }
+else { print "\n**** C compiler not found! Install by doing as root: 'yum group install Development Tools'\n\n"; exit 1; }
+
+system ( "cd SPOOLES.2.2;make -j $cpus lib");
+
+} # end sub
+
+######################
+
+sub calculix_changes {
+
+if ( $solver == 3 ) { return; }
+
+`perl -i -wpe 's/\#include \"spooles.h\"/\#ifdef SPOOLES\n\#include \"spooles.h\"\n\#endif/' $target_dir/massless.c;`;
+
+if ( $fortran_compiler =~ /^ifort/ ) { `cp Makefile $target_dir/Makefile`; return;}
+#	else { `perl -i -wpe 's/\=gfortran/\=gfortran -w/g' $target_dir/Makefile_MT;`; }
+
+`perl -i -wpe 's/\-Wall/\-w/g' $target_dir/Makefile_MT;`;
+`perl -i -wpe 's/CFLAGS \= /CFLAGS \= \-std\=gnu99 /' $target_dir/Makefile_MT;`;
+
+`cd CalculiX/ccx_$version/src;mv Makefile_MT Makefile`;
+
+} # end sub
+
+####################
+
+sub build_calculix {
+
+print "\n** Building Calculix - may take several minutes **\n\n";
+
+my $pwd = `pwd`;
+chomp ($pwd);
+
+system ( "cd CalculiX/ccx_$version/src;make -j $cpus");
+
+$executable = "ccx_$version" . '_MT';
+if ( $solver == 3 ) { $executable = "ccx_$version". '_MPI'; }
+
+`cp $target_dir/$executable ./;chmod 711 $executable`;
+
+#if ( $fortran_compiler =~ /^ifort/ ) { `mv ccx_$version_MT ccx_$version_MT_PARDISO`; $executable = "ccx_$version_MT_PARDISO"; }
+
+} # end sub
+
+###################
+
+sub check_success {
+
+if ( -e $executable ) {  
+    if ( $solver == 3 ) { print "\n** Done! - To run see this example:
+
+Example commands to run on two hosts
+====================================
+
+export OMP_NUM_THREADS=$cpus 
+mpirun -np 2 -ppn 1 -hosts=host1,host2 ./$executable input_deck
+
+For best results, keep the number of MPI processes ( -np ) a multiple of the power of 2, i.e 2, 4 or 8 . 
+Using -np 3 can be slower than -np 2 or -np 4 .
+
+Also, you can experiment with more than one MPI process per host and reducing the number of OMP_NUM_THREADS per process accordingly.
+
+For example, on a 40 cpu machine you can try: 
+
+export OMP_NUM_THREADS=10
+mpirun -np 4 ./$executable input_deck
+
+*** Some models may crash due to a known bug with Intel's cluster sparse solver. If that happens, try setting this environment 
+variable:
+
+export PARDISO_MPI_MATCHING=1\n"; 
+    } # end if
+    else { print "\n** Done! - To run, enter ./$executable . Set number of cpus to use by doing:\n\nexport OMP_NUM_THREADS=$cpus\n"; }
+} #end if
+
+else { print "\n** Something went wrong. Executable not created. Email info@feacluster with the contents of the log.txt file **\n\n"; exit 1; }
+
+} # end sub
+
+######################
+
+sub run_verification {
+
+print "\nHit (y) to run the test suite - May take 10+ minutes\n\n";
+
+my $answer = <STDIN>;
+chomp ( $answer );
+if ( $answer !~ /^y$/i ) { print "\nSkipping test suite\n"; return; }
+
+my $pwd = `pwd`;
+chomp ($pwd);
+if ( $solver == 3 ) { $pwd = 'export PARDISO_MPI_MATCHING=1;mpirun -np 2 ' . $pwd;  } 
+
+$pwd .= "/$executable";
+$pwd = quotemeta $pwd;
+
+`perl -i -wpe 's/\~\\/CalculiX\\/CalculiX/$pwd/g' CalculiX/ccx_$version/test/compare`;
+
+system ("cd CalculiX/ccx_$version/test;perl compare" );
+`cp CalculiX/ccx_$version/test/error.* ./`;
+
+} # end sub
+
+##################
+
+sub remove_files {
+
+print "\nHit (y) to remove the installation files and folders\n\n";
+
+my $answer = <STDIN>;
+chomp ( $answer );
+if ( $answer !~ /^y$/i ) { return; }
+
+`rm -f ccx_$version.src.* ccx_$version.test.* arpack96.* patch.* spooles.2.2.* SPOOLES.2.2/spooles.2.2.* Makefile`;
+`rm -f ccx_$version.SPOOLEScorrection.tar*`;
+`rm -rf ARPACK/ SPOOLES.2.2/`;
+`rm -f pardiso_mpi.tar.gz`;
+
+} # end sub
+
+########
+# MAIN #
+########
+
+&tried_download;
+
+&which_solver;
+
+&determine_fortran_compiler;
+
+&determine_cpus;
+
+#&download_files;
+
+#&unzip_files;
+
+&arpack_changes;
+
+&build_arpack;
+
+if ( $solver == 1 ) { &build_spooles; }
+
+&calculix_changes;
+
+&build_calculix;
+
+&check_success;
+
+&run_verification;
+
+&remove_files;
+
+1;
