@@ -290,7 +290,7 @@ S
 *MODAL DAMPING
 1,%d, 0.02
 *CLOAD,AMPLITUDE=%s
-Nnos_carga, 1, -1.
+Nnos_carga, 1, -1000000.
 *NODE FILE,NSET=Nall
 U
 *EL FILE,ELSET=Eall,TOTALS=ONLY
