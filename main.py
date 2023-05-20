@@ -1,6 +1,7 @@
 from numpy import integer
 import toml
 import os
+import shutil
 import math
 import ccx2paraview
 import numpy
@@ -169,7 +170,7 @@ def grava_fbd(nome_arquivo: str, dados_txt):
         """#
 # // ================== RADIER EM TRONCO DE CONE COM %i ESTACAS =========================
 # // Arquivo .fbd geracao da malha, condicoes de contorno e carregamentos entendidos pelo Calculix
-#""" % (dados_txt['estacas']["num_est"])]
+# """ % (dados_txt['estacas']["num_est"])]
 
     arquivo.append("""#
 read %s_mesh.inp
@@ -292,7 +293,7 @@ S
 *CLOAD,AMPLITUDE=%s
 Nnos_carga, 1, -1000000.
 *NODE FILE,NSET=Nall
-U
+U, RF
 *EL FILE,ELSET=Eall,TOTALS=ONLY
 ELSE,ELKE,EVOL
 *END STEP
@@ -307,7 +308,7 @@ ELSE,ELKE,EVOL
     pass
 
 
-def converte_resultados(nome_arquivo: str):
+def converte_resultados(nome_arquivo: str, NomePastaResultados: str):
     arquivo = nome_arquivo + "_solve.frd"
     c = ccx2paraview.Converter(arquivo, ['vtu'])
     print("Convertendo arquivos para Paraview")
@@ -333,12 +334,41 @@ def main_func():
     index = nome_arquivo.rfind(".")
     nome_arquivo = nome_arquivo[:index]
 
+    NomePastaResultados = "resultados_" + nome_arquivo
+
+    if os.path.exists(NomePastaResultados):
+
+        apagar_pasta = input(
+            "Deseja apagar a pasta %s [S/n]: " % (NomePastaResultados))
+
+        if apagar_pasta.lower() == 'n':
+            print("Altere o nome da pasta %s." % (NomePastaResultados))
+            exit()
+            pass
+
+    shutil.rmtree(NomePastaResultados, ignore_errors=True)
+
+    os.mkdir(NomePastaResultados)
+
+    print(os.getcwd())
+
     grava_geo(nome_arquivo, dados_txt)
     executa_gmsh(nome_arquivo + '.geo', dados_txt)
     grava_fbd(nome_arquivo, dados_txt)
     grava_solver(nome_arquivo, dados_txt)
     executa_cgx(nome_arquivo + '.fbd')
-    converte_resultados(nome_arquivo)
+    converte_resultados(nome_arquivo, NomePastaResultados)
+
+    import subprocess
+    if os.name == 'nt':
+        os.system("move /Y *.vtu %s" % (NomePastaResultados))
+        os.system("move /Y *.pvd %s" % (NomePastaResultados))
+        pass
+    elif os.name == 'posix':
+        os.system("mv -f *.vtu %s" % (NomePastaResultados), shell=True)
+        os.system("mv -f *.pvd %s" % (NomePastaResultados), shell=True)
+        pass
+    pass
 
     pass
 
