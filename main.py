@@ -323,8 +323,29 @@ def main_func():
         "Nome do arquivo a ser lido (incluir extensão, se houver): ")
     if nome_arquivo != "":
         dados_txt = toml.load(nome_arquivo)
+        pass
     else:
         nome_arquivo = None
+        pass
+
+    print("\n\nQual tipo de calculo deseja executar?\n" +
+          "[1] = calculo estatico\n" +
+          "[2] = calculo modal\n" +
+          "[3] = calculo dinamico\n")
+
+    tipo_calculo = input(
+        "\nDigite opcao:  ")
+
+    tipo_calculo = int(tipo_calculo)
+
+    if tipo_calculo == 1 or tipo_calculo == 2 or tipo_calculo == 3:
+        pass
+    else:
+        print("%s nao e uma opcao valida." % (tipo_calculo))
+        exit()
+        pass
+
+    tipo_calculo = ["estatico", "modal", "dinamico"][tipo_calculo - 1]
 
     # depuração de leitura do arquivo toml formatado
     new_toml_string = toml.dumps(dados_txt)
@@ -334,7 +355,7 @@ def main_func():
     index = nome_arquivo.rfind(".")
     nome_arquivo = nome_arquivo[:index]
 
-    NomePastaResultados = "resultados_" + nome_arquivo
+    NomePastaResultados = "resultados_" + nome_arquivo + "_" + tipo_calculo
 
     if os.path.exists(NomePastaResultados):
 
@@ -359,7 +380,6 @@ def main_func():
     executa_cgx(nome_arquivo + '.fbd')
     converte_resultados(nome_arquivo, NomePastaResultados)
 
-    import subprocess
     if os.name == 'nt':
         os.system("move /Y *.vtu %s" % (NomePastaResultados))
         os.system("move /Y *.pvd %s" % (NomePastaResultados))
