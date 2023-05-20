@@ -207,7 +207,8 @@ sys ccx_2.19_MT %s_solve
     pass
 
 
-def grava_solver(nome_arquivo: str, dados_txt):
+def grava_solver(nome_arquivo: str, dados_txt, tipo_calculo: str):
+    #####################################################
     # header _cgx.geo
     arquivo = [
         """// ================== RADIER EM TRONCO DE CONE COM %i ESTACAS =========================
@@ -215,6 +216,8 @@ def grava_solver(nome_arquivo: str, dados_txt):
 *include,input=%s.msh
 """ % (dados_txt['estacas']["num_est"], 'all', 'LatEstacas')]
 
+    #####################################################
+    # pontos de aplicacao do carregamento estatico e dinamico
     arquivo.append("""** pontos de aplicacao do carregamento dinamico
 *include,input=nos_carga.msh
 **
@@ -223,10 +226,16 @@ def grava_solver(nome_arquivo: str, dados_txt):
 8591
 """)
 
+    #####################################################
+    # condicoes de contorno
+
     arquivo.append("""** condicoes de contorno
 *boundary
 NLatEstacas,1 , 3, 0
 """ % ())
+
+    #####################################################
+    # definicao dos materiais
 
     arquivo.append("""** definicao do material
 *material, name=mat_radier
@@ -236,46 +245,64 @@ NLatEstacas,1 , 3, 0
 %e
 """ % (dados_txt['geometria']['mod_E'], dados_txt['geometria']['poi'], dados_txt['geometria']['den']))
 
+    #####################################################
+    # aplicacao dos materiais
+
     arquivo.append("""** aplicacao do material
 *solid section, elset=Eall, material=mat_radier
 """ % ())
 
-    arquivo.append("""** frequencia natural
-*step
-*frequency,solver=arpack,storage=yes
-%d""" % (dados_txt['freq_natural']['num_modos']))
+    #####################################################
+    # carregamento estatico do peso proprio
 
-    menor_freq = dados_txt['freq_natural']['menor_freq']
-    maior_freq = dados_txt['freq_natural']['maior_freq']
-
-    if (menor_freq == 0) and (maior_freq == 0):
-        arquivo.append(arquivo.pop() + """\n""" % ())
-    elif ((maior_freq == 0)):
-        arquivo.append(arquivo.pop() + (""",%.2f\n""" % (menor_freq)))
-    else:
-        arquivo.append(arquivo.pop() + (""",%.2f,%.2f\n""" %
-                       (menor_freq, maior_freq)))
-
-    arquivo.append("""** gravacao dos resultados
-*node file
-U
-*end step
-""" % ())
-
-    arquivo.append("""** carregamento peso proprio
+    if tipo_calculo == "estatico":
+        arquivo.append("""** carregamento peso proprio
 *step
 *static
 *DLOAD
 Eall,GRAV,%.3f,-1.,0.,0.
 """ % (dados_txt['geral']['gravidade']))
 
-    arquivo.append("""** gravacao dos resultados
+        arquivo.append("""** gravacao dos resultados
 *el file
 S
 *end step
 """ % ())
+        pass
 
-    arquivo.append("""*Amplitude, name=%s
+    #####################################################
+    # calculo da frequencia natural
+
+    if tipo_calculo == "modal" or tipo_calculo == "dinamico":
+        arquivo.append("""** frequencia natural
+*step
+*frequency,solver=arpack,storage=yes
+%d""" % (dados_txt['freq_natural']['num_modos']))
+
+        menor_freq = dados_txt['freq_natural']['menor_freq']
+        maior_freq = dados_txt['freq_natural']['maior_freq']
+
+        if (menor_freq == 0) and (maior_freq == 0):
+            arquivo.append(arquivo.pop() + """\n""" % ())
+        elif ((maior_freq == 0)):
+            arquivo.append(arquivo.pop() + (""",%.2f\n""" % (menor_freq)))
+        else:
+            arquivo.append(arquivo.pop() + (""",%.2f,%.2f\n""" %
+                                            (menor_freq, maior_freq)))
+
+        arquivo.append("""** gravacao dos resultados
+*node file
+U
+*end step
+    """ % ())
+        pass
+
+    #####################################################
+    # inclusao das forcas dinamicas
+
+    if tipo_calculo == "dinamico":
+
+        arquivo.append("""*Amplitude, name=%s
 **
 ** LER UM ARQUIVO EXTERNO (t, f(t))
 **
@@ -284,7 +311,10 @@ S
 
 """ % (dados_txt['cargas']['car_arq_0'], dados_txt['cargas']['car_arq_0']))
 
-    arquivo.append("""** calculo dinamico - vibracao forcada
+    #####################################################
+    # calculo da vibracao forcada
+
+        arquivo.append("""** calculo dinamico - vibracao forcada
 *STEP, INC=%d
 *MODAL DYNAMIC,SOLVER=ITERATIVE SCALING
 %e,%f
@@ -298,9 +328,13 @@ U, RF
 ELSE,ELKE,EVOL
 *END STEP
 """ % (dados_txt['cargas']['tempo_final'] / dados_txt['cargas']['incremento_tempo'] + 1,
-       dados_txt['cargas']['incremento_tempo'], dados_txt['cargas']['tempo_final'],
-        dados_txt['freq_natural']['num_modos'],
-        dados_txt['cargas']['car_arq_0']))
+            dados_txt['cargas']['incremento_tempo'], dados_txt['cargas']['tempo_final'],
+            dados_txt['freq_natural']['num_modos'],
+            dados_txt['cargas']['car_arq_0']))
+        pass
+
+    #####################################################
+    # salva inp
 
     with open(nome_arquivo + '_solve.inp', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
@@ -355,7 +389,8 @@ def main_func():
     index = nome_arquivo.rfind(".")
     nome_arquivo = nome_arquivo[:index]
 
-    NomePastaResultados = "resultados_" + nome_arquivo + "_" + tipo_calculo
+    nome_arquivo = nome_arquivo + "_" + tipo_calculo
+    NomePastaResultados = "resultados_" + nome_arquivo
 
     if os.path.exists(NomePastaResultados):
 
@@ -376,17 +411,15 @@ def main_func():
     grava_geo(nome_arquivo, dados_txt)
     executa_gmsh(nome_arquivo + '.geo', dados_txt)
     grava_fbd(nome_arquivo, dados_txt)
-    grava_solver(nome_arquivo, dados_txt)
+    grava_solver(nome_arquivo, dados_txt, tipo_calculo)
     executa_cgx(nome_arquivo + '.fbd')
     converte_resultados(nome_arquivo, NomePastaResultados)
 
     if os.name == 'nt':
-        os.system("move /Y *.vtu %s" % (NomePastaResultados))
-        os.system("move /Y *.pvd %s" % (NomePastaResultados))
+        os.system("move /Y %s*.* %s" % (nome_arquivo, NomePastaResultados))
         pass
     elif os.name == 'posix':
-        os.system("mv -f *.vtu %s" % (NomePastaResultados), shell=True)
-        os.system("mv -f *.pvd %s" % (NomePastaResultados), shell=True)
+        os.system("mv -f %s*.* %s" % (nome_arquivo, NomePastaResultados))
         pass
     pass
 

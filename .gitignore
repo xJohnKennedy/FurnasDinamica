@@ -13,6 +13,6 @@
 *.pvd
 *.m
 *.cvg
-/*.eig
-/*.lst
-/teste - Copia.txt
+*.eig
+*.lst
+teste - Copia.txt
