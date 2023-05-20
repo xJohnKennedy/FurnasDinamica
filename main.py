@@ -133,7 +133,7 @@ def grava_geo(nome_arquivo, dados_txt):
         Mesh.SaveGroupsOfElements = 1;
         Mesh.SaveGroupsOfNodes = 1;
         Mesh 3;
-        Save \"%s_mesh.inp\";""" % (4, cont_estq-1, 1, num_cargas, 61,
+        Save \"%s_mesh.inp\";""" % (4, cont_estq-1, 1, num_cargas, n_estq * 3 + 16,
                                     dados_txt['geral']['TamanhoMalha'], nome_arquivo))
 
     with open(nome_arquivo + '.geo', 'w') as file_out:
