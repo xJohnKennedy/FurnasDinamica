@@ -263,6 +263,29 @@ NLatEstacas,1 , 3, 0
 Eall,GRAV,%.3f,-1.,0.,0.
 """ % (dados_txt['geral']['gravidade']))
 
+    ##########
+    # se existir carregamento estatico aplicado
+        arquivo.append("""** carregamento estatico""")
+
+        for i in range(0, dados_txt['cargas']['num_cargas'] + 1):
+            try:
+                carga = dados_txt['cargas']['car_est_%i' % (i)]
+                pass
+            except:
+                carga = 0
+                pass
+            if carga != 0 and i == 0:
+                arquivo.append("""*CLOAD
+%s, 1, %f
+""" % ('Nnos_carga', carga * (-1)))
+                pass
+            elif carga != 0 and i != 0:
+                arquivo.append("""*CLOAD
+%i, 1, %f
+""" % (i, carga * (-1)))
+                pass
+            pass
+
         arquivo.append("""** gravacao dos resultados
 *el file
 S
@@ -309,7 +332,7 @@ U
 *include,input=%s
 **
 
-""" % (dados_txt['cargas']['car_arq_0'], dados_txt['cargas']['car_arq_0']))
+""" % (dados_txt['cargas']['car_din_0'], dados_txt['cargas']['car_din_0']))
 
     #####################################################
     # calculo da vibracao forcada

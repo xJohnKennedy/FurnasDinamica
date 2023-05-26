@@ -58,7 +58,7 @@ titulo = "Radier Estaqueado"
     maior_freq = 0          # maior frequencia natural desejada em rad/s
 
 
-# ----------------- vibração forçada ------------------ #
+# ----------------------------------------------------- #
 # --------- dados referentes aos carregamentos -------- #
 # ----------------------------------------------------- #	
 [cargas]
@@ -68,9 +68,29 @@ titulo = "Radier Estaqueado"
     incremento_tempo = 1e-3
     tempo_final = 10e-3
 
+
+    # arquivos de leitura de carregamentos estaticos
+    # car_est_0 tem predominância sobre outros carregamentos
+    # para desativar fazer car_est_0 = 0
+
+    car_est_0 = 100000
+    car_est_1 = 500000
+    car_est_2 = -500000
+    car_est_3 = 900000
+    car_est_4 = -500000
+    car_est_5 = 500000
+    car_est_6 = 100000
+    car_est_7 = 200000
+    car_est_8 = -100000
+    car_est_9 = -500000
+    car_est_10 = -200000
+    car_est_11 = 300000
+    car_est_12 = -300000
+
     # arquivos de leitura de carregamentos para vibração forçada
-    # car_arq_0 tem predominância sobre outros carregamentos
-    # para desativar fazer car_arq_0 = 0
+    # car_din_0 tem predominância sobre outros carregamentos
+    # para desativar fazer car_din_0 = 0
     
-    car_arq_0 = "PULAR.txt"    
-    car_arq_1 = 0  
+    car_din_0 = "PULAR.txt"
+    car_din_1 = "PULAR.txt" 
+    car_din_2 = "PULAR.txt" 
