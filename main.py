@@ -287,6 +287,8 @@ Eall,GRAV,%.3f,-1.,0.,0.
             pass
 
         arquivo.append("""** gravacao dos resultados
+*node file
+U, RF
 *el file
 S
 *end step
@@ -313,10 +315,13 @@ S
             arquivo.append(arquivo.pop() + (""",%.2f,%.2f\n""" %
                                             (menor_freq, maior_freq)))
 
-        arquivo.append("""** gravacao dos resultados
+        if tipo_calculo == "modal":
+            arquivo.append("""** gravacao dos resultados
 *node file
-U
-*end step
+U""")
+            pass
+
+        arquivo.append("""*end step
     """ % ())
         pass
 
@@ -325,35 +330,81 @@ U
 
     if tipo_calculo == "dinamico":
 
-        arquivo.append("""*Amplitude, name=%s
+        for i in range(0, dados_txt['cargas']['num_cargas'] + 1):
+            try:
+                carga = dados_txt['cargas']['car_est_%i' % (i)]
+                carga_din = dados_txt['cargas']['car_din_%i' % (i)]
+                pass
+            except:
+                carga = 0
+                carga_din = 0
+                pass
+            if carga != 0 and carga_din != 0:
+                arquivo.append("""*Amplitude, name=%s
 **
 ** LER UM ARQUIVO EXTERNO (t, f(t))
 **
 *include,input=%s
 **
 
-""" % (dados_txt['cargas']['car_din_0'], dados_txt['cargas']['car_din_0']))
+""" % ('car_din_%d' % (i), dados_txt['cargas']['car_din_%d' % (i)]))
+                pass
+            pass
+        pass
 
     #####################################################
     # calculo da vibracao forcada
+        num_modos_ini = dados_txt['vib_forcada']['num_modos_ini']
+        if num_modos_ini == 0:
+            num_modos_ini = 1
+            pass
+
+        num_modos_ult = dados_txt['vib_forcada']['num_modos_ult']
+        if num_modos_ult == 0:
+            num_modos_ult = dados_txt['freq_natural']['num_modos']
+            pass
 
         arquivo.append("""** calculo dinamico - vibracao forcada
 *STEP, INC=%d
 *MODAL DYNAMIC,SOLVER=ITERATIVE SCALING
 %e,%f
 *MODAL DAMPING
-1,%d, 0.02
-*CLOAD,AMPLITUDE=%s
-Nnos_carga, 1, -1000000.
-*NODE FILE,NSET=Nall
-U, RF
-*EL FILE,ELSET=Eall,TOTALS=ONLY
-ELSE,ELKE,EVOL
-*END STEP
+%d,%d, %f
 """ % (dados_txt['cargas']['tempo_final'] / dados_txt['cargas']['incremento_tempo'] + 1,
             dados_txt['cargas']['incremento_tempo'], dados_txt['cargas']['tempo_final'],
-            dados_txt['freq_natural']['num_modos'],
-            dados_txt['cargas']['car_arq_0']))
+            num_modos_ini, num_modos_ult, dados_txt['vib_forcada']['amortecimento']))
+
+    ##########
+    # se existir carregamento estatico aplicado e configuração de carga dinamica
+        arquivo.append("""** carregamento dinamico""")
+
+        for i in range(0, dados_txt['cargas']['num_cargas'] + 1):
+            try:
+                carga = dados_txt['cargas']['car_est_%i' % (i)]
+                carga_din = dados_txt['cargas']['car_din_%d' % (i)]
+                pass
+            except:
+                carga = 0
+                carga_din = 0
+                pass
+            if carga != 0 and carga_din != 0 and i == 0:
+                arquivo.append("""*CLOAD, AMPLITUDE = %s
+%s, 1, %f
+""" % ('car_din_%d' % (i), 'Nnos_carga', carga * (-1)))
+                pass
+            elif carga != 0 and carga_din != 0 and i != 0:
+                arquivo.append("""*CLOAD, AMPLITUDE = %s
+%i, 1, %f
+""" % ('car_din_%d' % (i), i, carga * (-1)))
+                pass
+            pass
+
+        arquivo.append("""*NODE FILE, NSET = Nall
+U, RF
+*EL FILE, ELSET = Eall, TOTALS = ONLY
+ELSE, ELKE, EVOL
+*END STEP
+""" % ())
         pass
 
     #####################################################
@@ -372,6 +423,10 @@ def converte_resultados(nome_arquivo: str, NomePastaResultados: str):
     c.run()
     print("Conversao realizada!")
 
+    pass
+
+
+def grava_resultados(nome_arquivo: str, NomePastaResultados: str):
     pass
 
 
@@ -440,9 +495,11 @@ def main_func():
 
     if os.name == 'nt':
         os.system("move /Y %s*.* %s" % (nome_arquivo, NomePastaResultados))
+        os.system("move /Y *.msh %s" % (NomePastaResultados))
         pass
     elif os.name == 'posix':
         os.system("mv -f %s*.* %s" % (nome_arquivo, NomePastaResultados))
+        os.system("mv -f *.msh %s" % (NomePastaResultados))
         pass
     pass
 

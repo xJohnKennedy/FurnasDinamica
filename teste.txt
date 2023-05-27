@@ -58,22 +58,48 @@ titulo = "Radier Estaqueado"
     maior_freq = 0          # maior frequencia natural desejada em rad/s
 
 
-# ----------------------------------------------------- #
+# --------------------- vibração forçada --------------------- #
+# -- dados referentes a interacao modal e ao amortecimento --- #
+# ------------------------------------------------------------ #	
+[vib_forcada]
+
+    # numero de modos para consideradar na interação modal utilizada para descrever
+    # o comportamento dinamico da estrutura, por exemplo, se forem inseridos os valores:
+    # num_modos_ini  =  1 e num_modos_ult  =  5, será considerado na composicao modal
+    # os modos 1, 2, 3, 4 e 5;
+    # Se for inserido algum valor igual a 0, será considerado um dos os valores extremos indicados no
+    # campo [freq_natural][num_modos], por exemplo, se inserido  valor num_modos_ini  =  2,
+    # num_modos_ult  =  0 e [freq_natural][num_modos] = 10, então os modos considerados para a
+    # comportamento modal serao: 2,3,4,5,6,7,8,9,10;
+    # Se inserido  valor num_modos_ini  =  0,
+    # num_modos_ult  =  5 e [freq_natural][num_modos] = 10, então os modos considerados para a
+    # comportamento modal serao: 1,2,3,4,5;
+
+    num_modos_ini  =  0        # primeiro modo da composicao modal
+    num_modos_ult  =  0        # ultimo modo da composicao modal
+
+    # amortecimento viscoso a ser aplicad para os modos definidos por num_modos_ini e num_modos_ult
+
+    amortecimento = 0.02
+
+
+
+# ---------------- vibração forçada ------------------- #
 # --------- dados referentes aos carregamentos -------- #
 # ----------------------------------------------------- #	
 [cargas]
 
     num_cargas  =  12           # numero de pontos de carregamentos aplicados no bloco na parte superior
     diam_carga 	=  300          # diametro  do circulo de distribuição das cargas (cm)
-    incremento_tempo = 1e-3
-    tempo_final = 10e-3
+    incremento_tempo = 1e-3     # tempo em segundos
+    tempo_final = 10e-3         # tempo em segundos
 
 
     # arquivos de leitura de carregamentos estaticos
     # car_est_0 tem predominância sobre outros carregamentos
     # para desativar fazer car_est_0 = 0
 
-    car_est_0 = 100000
+    car_est_0 = 0
     car_est_1 = 500000
     car_est_2 = -500000
     car_est_3 = 900000
@@ -92,5 +118,5 @@ titulo = "Radier Estaqueado"
     # para desativar fazer car_din_0 = 0
     
     car_din_0 = "PULAR.txt"
-    car_din_1 = "PULAR.txt" 
+    car_din_1 = "PULAR1.txt" 
     car_din_2 = "PULAR.txt" 
