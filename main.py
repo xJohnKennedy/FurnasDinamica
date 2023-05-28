@@ -426,7 +426,126 @@ def converte_resultados(nome_arquivo: str, NomePastaResultados: str):
     pass
 
 
-def grava_resultados(nome_arquivo: str, NomePastaResultados: str):
+def grava_resultados(nome_arquivo: str, NomePastaResultados: str, tipo_calculo: str):
+    os.chdir(NomePastaResultados)
+    print(os.getcwd())
+
+    if tipo_calculo == "estatico":
+        arquivo = [
+            """from paraview.simple import *
+paraview.simple._DisableFirstRenderCameraReset()
+
+teste_estatico_solvevtu = XMLUnstructuredGridReader(registrationName='%s.vtu', FileName=[
+                                                    %r])
+teste_estatico_solvevtu.PointArrayStatus = [
+    'RF', 'S', 'S_Mises', 'S_Principal', 'U']
+
+teste_estatico_solvevtu.TimeArray = 'None'
+
+renderView1 = GetActiveViewOrCreate('RenderView')
+
+teste_estatico_solvevtuDisplay = Show(
+    teste_estatico_solvevtu, renderView1, 'UnstructuredGridRepresentation')
+
+teste_estatico_solvevtuDisplay.Representation = 'Surface'
+teste_estatico_solvevtuDisplay.ColorArrayName = [None, '']
+teste_estatico_solvevtuDisplay.SelectTCoordArray = 'None'
+teste_estatico_solvevtuDisplay.SelectNormalArray = 'None'
+teste_estatico_solvevtuDisplay.SelectTangentArray = 'None'
+teste_estatico_solvevtuDisplay.OSPRayScaleArray = 'S'
+teste_estatico_solvevtuDisplay.OSPRayScaleFunction = 'PiecewiseFunction'
+teste_estatico_solvevtuDisplay.SelectOrientationVectors = 'None'
+teste_estatico_solvevtuDisplay.ScaleFactor = 2.2200000762939456
+teste_estatico_solvevtuDisplay.SelectScaleArray = 'None'
+teste_estatico_solvevtuDisplay.GlyphType = 'Arrow'
+teste_estatico_solvevtuDisplay.GlyphTableIndexArray = 'None'
+teste_estatico_solvevtuDisplay.GaussianRadius = 0.11100000381469727
+teste_estatico_solvevtuDisplay.SetScaleArray = ['POINTS', 'S']
+teste_estatico_solvevtuDisplay.ScaleTransferFunction = 'PiecewiseFunction'
+teste_estatico_solvevtuDisplay.OpacityArray = ['POINTS', 'S']
+teste_estatico_solvevtuDisplay.OpacityTransferFunction = 'PiecewiseFunction'
+teste_estatico_solvevtuDisplay.DataAxesGrid = 'GridAxesRepresentation'
+teste_estatico_solvevtuDisplay.PolarAxes = 'PolarAxesRepresentation'
+teste_estatico_solvevtuDisplay.ScalarOpacityUnitDistance = 0.7304860160655032
+teste_estatico_solvevtuDisplay.OpacityArrayName = ['POINTS', 'S']
+
+teste_estatico_solvevtuDisplay.ScaleTransferFunction.Points = [
+    -6000690.0, 0.0, 0.5, 0.0, 1318560.0, 1.0, 0.5, 0.0]
+
+teste_estatico_solvevtuDisplay.OpacityTransferFunction.Points = [
+    -6000690.0, 0.0, 0.5, 0.0, 1318560.0, 1.0, 0.5, 0.0]
+
+renderView1.ResetCamera(False)
+
+materialLibrary1 = GetMaterialLibrary()
+
+renderView1.Update()
+
+generateGlobalIds1 = GenerateGlobalIds(
+    registrationName='GenerateGlobalIds1', Input=teste_estatico_solvevtu)
+
+generateGlobalIds1Display = Show(
+    generateGlobalIds1, renderView1, 'UnstructuredGridRepresentation')
+
+generateGlobalIds1Display.Representation = 'Surface'
+generateGlobalIds1Display.ColorArrayName = [None, '']
+generateGlobalIds1Display.SelectTCoordArray = 'None'
+generateGlobalIds1Display.SelectNormalArray = 'None'
+generateGlobalIds1Display.SelectTangentArray = 'None'
+generateGlobalIds1Display.OSPRayScaleArray = 'GlobalPointIds'
+generateGlobalIds1Display.OSPRayScaleFunction = 'PiecewiseFunction'
+generateGlobalIds1Display.SelectOrientationVectors = 'None'
+generateGlobalIds1Display.ScaleFactor = 2.2200000762939456
+generateGlobalIds1Display.SelectScaleArray = 'GlobalPointIds'
+generateGlobalIds1Display.GlyphType = 'Arrow'
+generateGlobalIds1Display.GlyphTableIndexArray = 'GlobalPointIds'
+generateGlobalIds1Display.GaussianRadius = 0.11100000381469727
+generateGlobalIds1Display.SetScaleArray = ['POINTS', 'GlobalPointIds']
+generateGlobalIds1Display.ScaleTransferFunction = 'PiecewiseFunction'
+generateGlobalIds1Display.OpacityArray = ['POINTS', 'GlobalPointIds']
+generateGlobalIds1Display.OpacityTransferFunction = 'PiecewiseFunction'
+generateGlobalIds1Display.DataAxesGrid = 'GridAxesRepresentation'
+generateGlobalIds1Display.PolarAxes = 'PolarAxesRepresentation'
+generateGlobalIds1Display.ScalarOpacityUnitDistance = 0.7304860160655032
+generateGlobalIds1Display.OpacityArrayName = ['POINTS', 'GlobalPointIds']
+
+generateGlobalIds1Display.ScaleTransferFunction.Points = [
+    0.0, 0.0, 0.5, 0.0, 21532.0, 1.0, 0.5, 0.0]
+
+generateGlobalIds1Display.OpacityTransferFunction.Points = [
+    0.0, 0.0, 0.5, 0.0, 21532.0, 1.0, 0.5, 0.0]
+
+Hide(teste_estatico_solvevtu, renderView1)
+
+renderView1.Update()
+
+SaveData(%r, proxy=generateGlobalIds1, PointDataArrays=['GlobalPointIds', 'RF', 'S', 'S_Mises', 'S_Principal', 'U', 'vtkGhostType'],
+         CellDataArrays=['GlobalCellIds'])
+
+layout1 = GetLayout()
+layout1.SetSize(989, 494)
+
+renderView1.CameraPosition = [28.888712451925134,
+                              6.1795658897651125, 56.597073547304795]
+renderView1.CameraFocalPoint = [-1.434999942779541, 0.0, 0.0]
+renderView1.CameraViewUp = [0.8822946977651789, -
+                            0.024212433113632765, -0.4700742753844009]
+renderView1.CameraParallelScale = 16.695219357272986
+""" % (nome_arquivo + '_solve', os.getcwd() + '\%s_solve.vtu' % (nome_arquivo),
+                os.getcwd() + '\%s_resultados.txt' % (nome_arquivo))]
+        pass
+
+    with open('script_paraview.py', 'w') as file_out:
+        file_out.writelines('\n'.join(arquivo))
+        file_out.close()
+        pass
+
+    # executa pvbatch para tratar exportar resultados para txt
+
+    os.system('"C:\\Program Files\\ParaView 5.10.0-Windows-Python3.9-msvc2017-AMD64\\bin\\pvbatch.exe" %s'
+              % ('script_paraview.py'))
+    os.system('del /Q script_paraview.py')
+
     pass
 
 
@@ -501,7 +620,8 @@ def main_func():
         os.system("mv -f %s*.* %s" % (nome_arquivo, NomePastaResultados))
         os.system("mv -f *.msh %s" % (NomePastaResultados))
         pass
-    pass
+
+    grava_resultados(nome_arquivo, NomePastaResultados, tipo_calculo)
 
     pass
 
