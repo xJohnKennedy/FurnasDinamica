@@ -535,6 +535,105 @@ renderView1.CameraParallelScale = 16.695219357272986
                 os.getcwd() + '\%s_resultados.txt' % (nome_arquivo))]
         pass
 
+    if tipo_calculo == "modal":
+        arquivo = [
+            """from paraview.simple import *
+paraview.simple._DisableFirstRenderCameraReset()
+
+teste_modal_solvepvd = PVDReader(registrationName='%s.pvd', FileName=%r)
+teste_modal_solvepvd.PointArrays = ['U']
+
+animationScene1 = GetAnimationScene()
+
+animationScene1.UpdateAnimationUsingDataTimeSteps()
+
+
+renderView1 = GetActiveViewOrCreate('RenderView')
+
+teste_modal_solvepvdDisplay = Show(teste_modal_solvepvd, renderView1, 'UnstructuredGridRepresentation')
+
+teste_modal_solvepvdDisplay.Representation = 'Surface'
+teste_modal_solvepvdDisplay.ColorArrayName = [None, '']
+teste_modal_solvepvdDisplay.SelectTCoordArray = 'None'
+teste_modal_solvepvdDisplay.SelectNormalArray = 'None'
+teste_modal_solvepvdDisplay.SelectTangentArray = 'None'
+teste_modal_solvepvdDisplay.OSPRayScaleArray = 'U'
+teste_modal_solvepvdDisplay.OSPRayScaleFunction = 'PiecewiseFunction'
+teste_modal_solvepvdDisplay.SelectOrientationVectors = 'None'
+teste_modal_solvepvdDisplay.ScaleFactor = 2.2200000762939456
+teste_modal_solvepvdDisplay.SelectScaleArray = 'None'
+teste_modal_solvepvdDisplay.GlyphType = 'Arrow'
+teste_modal_solvepvdDisplay.GlyphTableIndexArray = 'None'
+teste_modal_solvepvdDisplay.GaussianRadius = 0.11100000381469727
+teste_modal_solvepvdDisplay.SetScaleArray = ['POINTS', 'U']
+teste_modal_solvepvdDisplay.ScaleTransferFunction = 'PiecewiseFunction'
+teste_modal_solvepvdDisplay.OpacityArray = ['POINTS', 'U']
+teste_modal_solvepvdDisplay.OpacityTransferFunction = 'PiecewiseFunction'
+teste_modal_solvepvdDisplay.DataAxesGrid = 'GridAxesRepresentation'
+teste_modal_solvepvdDisplay.PolarAxes = 'PolarAxesRepresentation'
+teste_modal_solvepvdDisplay.ScalarOpacityUnitDistance = 0.7304860160655032
+teste_modal_solvepvdDisplay.OpacityArrayName = ['POINTS', 'U']
+
+
+teste_modal_solvepvdDisplay.ScaleTransferFunction.Points = [-0.000611832, 0.0, 0.5, 0.0, 3.8625099999999957e-05, 1.0, 0.5, 0.0]
+
+teste_modal_solvepvdDisplay.OpacityTransferFunction.Points = [-0.000611832, 0.0, 0.5, 0.0, 3.8625099999999957e-05, 1.0, 0.5, 0.0]
+
+renderView1.ResetCamera(False)
+
+materialLibrary1 = GetMaterialLibrary()
+
+renderView1.Update()
+
+generateGlobalIds1 = GenerateGlobalIds(registrationName='GenerateGlobalIds1', Input=teste_modal_solvepvd)
+
+generateGlobalIds1Display = Show(generateGlobalIds1, renderView1, 'UnstructuredGridRepresentation')
+
+generateGlobalIds1Display.Representation = 'Surface'
+generateGlobalIds1Display.ColorArrayName = [None, '']
+generateGlobalIds1Display.SelectTCoordArray = 'None'
+generateGlobalIds1Display.SelectNormalArray = 'None'
+generateGlobalIds1Display.SelectTangentArray = 'None'
+generateGlobalIds1Display.OSPRayScaleArray = 'GlobalPointIds'
+generateGlobalIds1Display.OSPRayScaleFunction = 'PiecewiseFunction'
+generateGlobalIds1Display.SelectOrientationVectors = 'None'
+generateGlobalIds1Display.ScaleFactor = 2.2200000762939456
+generateGlobalIds1Display.SelectScaleArray = 'GlobalPointIds'
+generateGlobalIds1Display.GlyphType = 'Arrow'
+generateGlobalIds1Display.GlyphTableIndexArray = 'GlobalPointIds'
+generateGlobalIds1Display.GaussianRadius = 0.11100000381469727
+generateGlobalIds1Display.SetScaleArray = ['POINTS', 'GlobalPointIds']
+generateGlobalIds1Display.ScaleTransferFunction = 'PiecewiseFunction'
+generateGlobalIds1Display.OpacityArray = ['POINTS', 'GlobalPointIds']
+generateGlobalIds1Display.OpacityTransferFunction = 'PiecewiseFunction'
+generateGlobalIds1Display.DataAxesGrid = 'GridAxesRepresentation'
+generateGlobalIds1Display.PolarAxes = 'PolarAxesRepresentation'
+generateGlobalIds1Display.ScalarOpacityUnitDistance = 0.7304860160655032
+generateGlobalIds1Display.OpacityArrayName = ['POINTS', 'GlobalPointIds']
+
+generateGlobalIds1Display.ScaleTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 21532.0, 1.0, 0.5, 0.0]
+
+generateGlobalIds1Display.OpacityTransferFunction.Points = [0.0, 0.0, 0.5, 0.0, 21532.0, 1.0, 0.5, 0.0]
+
+Hide(teste_modal_solvepvd, renderView1)
+
+renderView1.Update()
+
+SaveData(%r, proxy=generateGlobalIds1, WriteTimeSteps=1,
+    ChooseArraysToWrite=1,
+    PointDataArrays=['GlobalPointIds', 'U', 'vtkGhostType'],
+    CellDataArrays=['GlobalCellIds'])
+
+layout1 = GetLayout()
+layout1.SetSize(989, 494)
+
+renderView1.CameraPosition = [-1.434999942779541, 0.0, 64.50537421100464]
+renderView1.CameraFocalPoint = [-1.434999942779541, 0.0, 0.0]
+renderView1.CameraParallelScale = 16.695219357272986
+""" % (nome_arquivo + '_solve', os.getcwd() + '\%s_solve.pvd' % (nome_arquivo),
+                os.getcwd() + '\%s_resultados.txt' % (nome_arquivo))]
+        pass
+
     with open('script_paraview.py', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
         file_out.close()
