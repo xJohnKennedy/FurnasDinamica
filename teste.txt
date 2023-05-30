@@ -29,8 +29,21 @@ titulo = "Radier Estaqueado"
 
     num_est  =  15      # numero de estacas
     diam_est =  30      # diametro das estacas (cm)
-    h_est    =  712     # altura das estacas (cm)
+    h_est    =  500     # altura das estacas (cm)
     cob_est  =  200     # distancia da face de concreto ao eixo das estacas (cm)
+
+
+# --- dados referentes ao volume de solo envolvente --- #
+# ----------------------------------------------------- #
+[solo]
+
+    base_y      =  3000      # comprimento da aresta 1 do solo (cm)
+    base_z      =  3000      # comprimento da aresta 2 do solo (cm)
+    h_solo      =  1000     # profundidade do solo (cm)
+
+    mod_E = 79.0e6            # modulo de elasticidade (Pa)
+    poi = 0.35                   # coeficiente de Poisson
+    den = 2000                  # densidade (kg/m³)
 	
 
 # ----------------------------------------------------- #
@@ -78,7 +91,7 @@ titulo = "Radier Estaqueado"
     num_modos_ini  =  0        # primeiro modo da composicao modal
     num_modos_ult  =  0        # ultimo modo da composicao modal
 
-    # amortecimento viscoso a ser aplicad para os modos definidos por num_modos_ini e num_modos_ult
+    # amortecimento viscoso a ser aplicado para os modos definidos por num_modos_ini e num_modos_ult
 
     amortecimento = 0.02
 

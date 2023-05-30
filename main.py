@@ -33,6 +33,13 @@ def adiciona_cilindro(arquivo, tag: integer,  x0, y0, z0, dx, dy, dz, r0, coment
     pass
 
 
+def adiciona_bloco_solo(arquivo, tag: integer,  x0, y0, z0, dx, dy, dz, coment=""):
+    # definicao do tronco de cone:
+    arquivo.append('Box(%i) = {%f, %f, %f, %f, %f, %f}; %s'
+                   % (tag,  x0, y0, z0, dx, dy, dz, coment))
+    pass
+
+
 def lateral_cilindro_tag(tag: integer):
     return (tag*3 - 2)
 
@@ -41,7 +48,7 @@ def ponta_cilindro_tag(tag: integer):
     return (tag*3 - 1)
 
 
-def grava_geo(nome_arquivo, dados_txt):
+def grava_geo(nome_arquivo, dados_txt, tem_solo: int = 0):
 
     # header .geo
     arquivo = [
@@ -70,10 +77,6 @@ def grava_geo(nome_arquivo, dados_txt):
     adiciona_cilindro(arquivo, 2,  0, 0, 0, h_base, 0, 0, D_base/2)
 
     adiciona_cilindro(arquivo, 3,  h_base+h_cone, 0, 0, h_topo, 0, 0, D_topo/2)
-
-    # adiciona pontos de cargas na geometria
-    arquivo.append('//Point{%i : %i} In Surface {%i};' % (1, num_cargas, 8))
-    arquivo.append('//Point{%i : %i} In Volume {%i};' % (1, num_cargas, 3))
 
     arquivo.append(
         'Physical Point ("nos_carga") = {%d : %d};' % (1, num_cargas))
@@ -123,18 +126,47 @@ def grava_geo(nome_arquivo, dados_txt):
     arquivo.append(grupo_Lateral_estacas)
     arquivo.append(grupo_ponta_estacas)
 
-    arquivo.append(
-        """//make all interfaces conformal
-        b() = BooleanFragments{ Volume {1:3}; Delete; }{ Volume {%d:%d}; Delete; };
-        Physical Volume (\"bloco\") = {b()};
-        Point{%i : %i} In Surface {%i};
-        MeshSize {:} = %f;
-        Mesh.SaveAll=1;
-        Mesh.SaveGroupsOfElements = 1;
-        Mesh.SaveGroupsOfNodes = 1;
-        Mesh 3;
-        Save \"%s_mesh.inp\";""" % (4, cont_estq-1, 1, num_cargas, n_estq * 3 + 16,
-                                    dados_txt['geral']['TamanhoMalha'], nome_arquivo))
+    tag_ultimo_vol = cont_estq-1
+    tag_ultimo_plano = n_estq * 3 + 16
+
+    if tem_solo:
+        # definicao das variaveis de geometria d solo:
+        dx_solo = dados_txt['solo']['h_solo'] / 100
+        dy_solo = dados_txt['solo']['base_y'] / 100
+        dz_solo = dados_txt['solo']['base_z'] / 100
+        y0_solo = -dy_solo/2
+        z0_solo = -dz_solo/2
+
+        adiciona_bloco_solo(arquivo, cont_estq,  0, y0_solo, z0_solo, -dx_solo, dy_solo, dz_solo,
+                            "// Cubo solo envolvente")
+
+        plano_fundo_solo = 3 * n_estq + 10
+        arquivo.append(
+            """
+Physical Surface ("LatSolo") = {%d:%d};
+//retira volume das estacas do volume de solo
+b() = BooleanDifference { Volume {%d}; Delete; }{ Volume {1:%d};};
+Physical Volume ("solo") = {b()};"""
+            % (plano_fundo_solo, plano_fundo_solo + 4, cont_estq, cont_estq - 1))
+
+        tag_ultimo_vol = cont_estq
+        tag_ultimo_plano = n_estq * 3 + 22
+        pass
+
+    arquivo.append("""
+//make all interfaces conformal
+b() = BooleanFragments{ Volume {1:3}; Delete; }{ Volume {%d:%d}; Delete; };
+Physical Volume (\"bloco\") = {b()};
+Point{%i : %i} In Surface {%i};""" % (4, tag_ultimo_vol, 1, num_cargas, tag_ultimo_plano))
+
+    arquivo.append("""
+         MeshSize {:} = %f;
+         Mesh.SaveAll=1;
+         Mesh.SaveGroupsOfElements = 1;
+         Mesh.SaveGroupsOfNodes = 1;
+         Mesh 3;
+         Save \"%s_mesh.inp\";""" % (
+        dados_txt['geral']['TamanhoMalha'], nome_arquivo))
 
     with open(nome_arquivo + '.geo', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
@@ -648,23 +680,30 @@ renderView1.CameraParallelScale = 16.695219357272986
     pass
 
 
-def main_func():
-    nome_arquivo = input(
-        "Nome do arquivo a ser lido (incluir extensão, se houver): ")
-    if nome_arquivo != "":
+def ler_arquivo(nome_arquivo: str = None):
+    if nome_arquivo == None:
+        nome_arquivo = input(
+            "Nome do arquivo a ser lido (incluir extensão, se houver): ")
+    if nome_arquivo != "" or nome_arquivo != None:
         dados_txt = toml.load(nome_arquivo)
         pass
     else:
-        nome_arquivo = None
+        exit()
         pass
+    return nome_arquivo, dados_txt
 
-    print("\n\nQual tipo de calculo deseja executar?\n" +
-          "[1] = calculo estatico\n" +
-          "[2] = calculo modal\n" +
-          "[3] = calculo dinamico\n")
 
-    tipo_calculo = input(
-        "\nDigite opcao:  ")
+def escolhe_calculo(tipo_calculo: int = None):
+
+    if tipo_calculo == None:
+        print("\n\nQual tipo de calculo deseja executar?\n" +
+              "[1] = calculo estatico\n" +
+              "[2] = calculo modal\n" +
+              "[3] = calculo dinamico\n")
+
+        tipo_calculo = input(
+            "\nDigite opcao:  ")
+        pass
 
     tipo_calculo = int(tipo_calculo)
 
@@ -677,9 +716,31 @@ def main_func():
 
     tipo_calculo = ["estatico", "modal", "dinamico"][tipo_calculo - 1]
 
-    # depuração de leitura do arquivo toml formatado
-    new_toml_string = toml.dumps(dados_txt)
-    print(new_toml_string)
+    return tipo_calculo
+
+
+def escolhe_solo(tem_solo: int = None):
+
+    if tem_solo == None:
+        print("\n\nConsiderar solo envolvente?\n" +
+              "[0] = Nao\n" +
+              "[1] = Sim\n")
+
+        tem_solo = input(
+            "\nDigite opcao:  ")
+        pass
+
+    tem_solo = int(tem_solo)
+
+    if tem_solo == 1:
+        return 1
+        pass
+    else:
+        return 0
+        pass
+
+
+def gerencia_pastas(nome_arquivo: str, tipo_calculo: str):
 
     # identifica extensao do nome do arquivo e cria arquivo .geo com o mesmo nome do .txt
     index = nome_arquivo.rfind(".")
@@ -704,7 +765,23 @@ def main_func():
 
     print(os.getcwd())
 
-    grava_geo(nome_arquivo, dados_txt)
+    return nome_arquivo, NomePastaResultados
+
+
+def main_func():
+
+    nome_arquivo, dados_txt = ler_arquivo()
+    tipo_calculo = escolhe_calculo()
+    tem_solo = escolhe_solo()
+
+    # depuração de leitura do arquivo toml formatado e imprime na tela
+    new_toml_string = toml.dumps(dados_txt)
+    print(new_toml_string)
+
+    nome_arquivo, NomePastaResultados = gerencia_pastas(
+        nome_arquivo, tipo_calculo)
+
+    grava_geo(nome_arquivo, dados_txt, tem_solo)
     executa_gmsh(nome_arquivo + '.geo', dados_txt)
     grava_fbd(nome_arquivo, dados_txt)
     grava_solver(nome_arquivo, dados_txt, tipo_calculo)
