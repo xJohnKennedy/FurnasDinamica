@@ -196,7 +196,7 @@ def executa_cgx(nome_arquivo):
     pass
 
 
-def grava_fbd(nome_arquivo: str, dados_txt):
+def grava_fbd(nome_arquivo: str, dados_txt, tem_solo: int = 0):
     # header _cgx.geo
     arquivo = [
         """#
@@ -211,13 +211,22 @@ ulin gmsh without virtual topology
 zap +T3D2
 # remove elementos de superficie
 zap +CPS3
+
 # salva definicoes de malha e condicoes de contorno
 send all abq
 send nos_carga abq
-send nos_carga lst
 send LatEstacas abq
+send bloco01 abq
+send estacas abq
+send PontEstacas abq""" % (nome_arquivo))
 
-""" % (nome_arquivo))
+    if tem_solo:
+        arquivo.append("""# nos e elementos do solo
+send LatSolo abq
+send solo abq
+
+""" % ())
+        pass
 
     if os.name == 'nt':
         arquivo.append("""
@@ -239,7 +248,7 @@ sys ccx_2.19_MT %s_solve
     pass
 
 
-def grava_solver(nome_arquivo: str, dados_txt, tipo_calculo: str):
+def grava_solver(nome_arquivo: str, dados_txt, tipo_calculo: str, tem_solo: int = 0):
     #####################################################
     # header _cgx.geo
     arquivo = [
@@ -783,7 +792,7 @@ def main_func():
 
     grava_geo(nome_arquivo, dados_txt, tem_solo)
     executa_gmsh(nome_arquivo + '.geo', dados_txt)
-    grava_fbd(nome_arquivo, dados_txt)
+    grava_fbd(nome_arquivo, dados_txt, tem_solo)
     grava_solver(nome_arquivo, dados_txt, tipo_calculo)
     executa_cgx(nome_arquivo + '.fbd')
     converte_resultados(nome_arquivo, NomePastaResultados)

@@ -13,3 +13,6 @@ nome_arquivo, NomePastaResultados = gerencia_pastas(
     nome_arquivo, tipo_calculo)
 
 grava_geo(nome_arquivo, dados_txt, tem_solo)
+# executa_gmsh(nome_arquivo + '.geo', dados_txt)
+grava_fbd(nome_arquivo, dados_txt, tem_solo)
+grava_solver(nome_arquivo, dados_txt, tipo_calculo, tem_solo)
