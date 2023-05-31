@@ -219,7 +219,7 @@ sys ccx_2.19_MT %s_solve
         file_out.close()
         pass
 
-    executa_cgx('sys_solve_' + nome_arquivo + '.fbd')
+    executa_cgx(nome_arquivo + '_sys_solve.fbd')
 
 
 def grava_fbd(nome_arquivo: str, dados_txt, tem_solo: int = 0):
@@ -816,14 +816,35 @@ def escolhe_solo(tem_solo: int = None):
         pass
 
 
-def gerencia_pastas(nome_arquivo: str, tipo_calculo: str):
+def gerencia_pastas(nome_arquivo: str, tipo_calculo: str, copia_msh: int = None):
 
     # identifica extensao do nome do arquivo e cria arquivo .geo com o mesmo nome do .txt
     index = nome_arquivo.rfind(".")
     nome_arquivo = nome_arquivo[:index]
 
+    nome_arquivo_bruto = nome_arquivo
     nome_arquivo = nome_arquivo + "_" + tipo_calculo
     NomePastaResultados = "resultados_" + nome_arquivo
+
+    if copia_msh == None:
+        copia_msh = input("""Deseja copiar os dados de malha de algum processamento?: 
+ [0] = Nao\n [1] = Estatico\n [2] = Modal\n [3] = Dinamico
+\n Digite a opção: """)
+        copia_msh = int(copia_msh)
+        pass
+
+    if copia_msh in [1, 2, 3]:
+
+        if os.name == 'nt':
+            os.system("robocopy %s . *.msh" %
+                      ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
+            pass
+        elif os.name == 'posix':
+            KeyError()
+            os.system("mv -f %s*.* %s" % (nome_arquivo, NomePastaResultados))
+            os.system("mv -f *.msh %s" % (NomePastaResultados))
+            pass
+        pass
 
     if os.path.exists(NomePastaResultados):
 
@@ -842,6 +863,19 @@ def gerencia_pastas(nome_arquivo: str, tipo_calculo: str):
     print(os.getcwd())
 
     return nome_arquivo, NomePastaResultados
+
+
+def gerencia_arquivos(nome_arquivo: str, NomePastaResultados: str):
+
+    if os.name == 'nt':
+        os.system("move /Y %s*.* %s" % (nome_arquivo, NomePastaResultados))
+        os.system("move /Y *.msh %s" % (NomePastaResultados))
+        pass
+    elif os.name == 'posix':
+        os.system("mv -f %s*.* %s" % (nome_arquivo, NomePastaResultados))
+        os.system("mv -f *.msh %s" % (NomePastaResultados))
+        pass
+    return
 
 
 def main_func():
@@ -865,14 +899,7 @@ def main_func():
     executa_ccx(nome_arquivo)
     converte_resultados(nome_arquivo, NomePastaResultados)
 
-    if os.name == 'nt':
-        os.system("move /Y %s*.* %s" % (nome_arquivo, NomePastaResultados))
-        os.system("move /Y *.msh %s" % (NomePastaResultados))
-        pass
-    elif os.name == 'posix':
-        os.system("mv -f %s*.* %s" % (nome_arquivo, NomePastaResultados))
-        os.system("mv -f *.msh %s" % (NomePastaResultados))
-        pass
+    gerencia_arquivos(nome_arquivo, NomePastaResultados)
 
     grava_resultados(nome_arquivo, NomePastaResultados, tipo_calculo)
 
