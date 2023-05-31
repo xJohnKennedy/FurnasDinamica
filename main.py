@@ -196,6 +196,32 @@ def executa_cgx(nome_arquivo):
     pass
 
 
+def executa_ccx(nome_arquivo: str):
+    # header _cgx.geo
+    arquivo = []
+
+    if os.name == 'nt':
+        arquivo.append("""
+# solve
+sys ccx %s_solve
+
+""" % (nome_arquivo))
+
+    if os.name == 'posix':
+        arquivo.append("""
+# solve
+sys ccx_2.19_MT %s_solve
+
+""" % (nome_arquivo))
+
+    with open('sys_solve_' + nome_arquivo + '.fbd', 'w') as file_out:
+        file_out.writelines('\n'.join(arquivo))
+        file_out.close()
+        pass
+
+    executa_cgx('sys_solve_' + nome_arquivo + '.fbd')
+
+
 def grava_fbd(nome_arquivo: str, dados_txt, tem_solo: int = 0):
     # header _cgx.geo
     arquivo = [
@@ -213,7 +239,7 @@ zap +T3D2
 zap +CPS3
 
 # salva definicoes de malha e condicoes de contorno
-send all abq
+
 send nos_carga abq
 send LatEstacas abq
 send bloco01 abq
@@ -231,14 +257,14 @@ send solo abq
     if os.name == 'nt':
         arquivo.append("""
 # solve
-sys ccx %s_solve
+# sys ccx %s_solve
 
 """ % (nome_arquivo))
 
     if os.name == 'posix':
         arquivo.append("""
 # solve
-sys ccx_2.19_MT %s_solve
+# sys ccx_2.19_MT %s_solve
 
 """ % (nome_arquivo))
 
@@ -255,7 +281,18 @@ def grava_solver(nome_arquivo: str, dados_txt, tipo_calculo: str, tem_solo: int 
         """// ================== RADIER EM TRONCO DE CONE COM %i ESTACAS =========================
 *include,input=%s.msh
 *include,input=%s.msh
-""" % (dados_txt['estacas']["num_est"], 'all', 'LatEstacas')]
+*include,input=%s.msh
+*include,input=%s.msh
+""" % (dados_txt['estacas']["num_est"], 'bloco01', 'estacas', 'LatEstacas', 'PontEstacas')]
+
+    if tem_solo:
+        #####################################################
+        # nos e elementos do solo envolvente
+        arquivo.append(""" ** nos e elementos do solo envolvente
+*include,input=%s.msh
+*include,input=%s.msh
+""" % ('solo', 'LatSolo'))
+        pass
 
     #####################################################
     # pontos de aplicacao do carregamento estatico e dinamico
@@ -276,9 +313,9 @@ NLatEstacas,1 , 3, 0
 """ % ())
 
     #####################################################
-    # definicao dos materiais
+    # definicao dos materiais do bloco e estacas
 
-    arquivo.append("""** definicao do material
+    arquivo.append("""** definicao do material do bloco
 *material, name=mat_radier
 *elastic
 %e,%e,0
@@ -286,23 +323,53 @@ NLatEstacas,1 , 3, 0
 %e
 """ % (dados_txt['geometria']['mod_E'], dados_txt['geometria']['poi'], dados_txt['geometria']['den']))
 
+    if tem_solo:
+        #####################################################
+        # definicao dos materiais do solo envolvente
+
+        arquivo.append("""** definicao do material do solo
+*material, name=mat_solo
+*elastic
+%e,%e,0
+*density
+%e
+""" % (dados_txt['solo']['mod_E'], dados_txt['solo']['poi'], dados_txt['solo']['den']))
+        pass
+
     #####################################################
     # aplicacao dos materiais
 
-    arquivo.append("""** aplicacao do material
-*solid section, elset=Eall, material=mat_radier
+    arquivo.append("""** aplicacao do material no bloco
+*solid section, elset=Ebloco01, material=mat_radier
 """ % ())
+
+    arquivo.append("""** aplicacao do material nas estacas
+*solid section, elset=Eestacas, material=mat_radier
+""" % ())
+
+    if tem_solo:
+        arquivo.append("""** aplicacao do material no solo
+*solid section, elset=Esolo, material=mat_solo
+""" % ())
+        pass
 
     #####################################################
     # carregamento estatico do peso proprio
 
     if tipo_calculo == "estatico":
+        gravidade = dados_txt['geral']['gravidade']
         arquivo.append("""** carregamento peso proprio
 *step
 *static
 *DLOAD
-Eall,GRAV,%.3f,-1.,0.,0.
-""" % (dados_txt['geral']['gravidade']))
+Ebloco01,GRAV,%.3f,-1.,0.,0.
+Eestacas,GRAV,%.3f,-1.,0.,0.""" % (gravidade, gravidade))
+
+        if tem_solo:
+            arquivo.append("""Esolo,GRAV,%.3f,-1.,0.,0.
+""" % (gravidade))
+            pass
+        pass
 
     ##########
     # se existir carregamento estatico aplicado
@@ -795,6 +862,7 @@ def main_func():
     grava_fbd(nome_arquivo, dados_txt, tem_solo)
     grava_solver(nome_arquivo, dados_txt, tipo_calculo)
     executa_cgx(nome_arquivo + '.fbd')
+    executa_ccx(nome_arquivo)
     converte_resultados(nome_arquivo, NomePastaResultados)
 
     if os.name == 'nt':
