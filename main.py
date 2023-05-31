@@ -214,7 +214,7 @@ sys ccx_2.19_MT %s_solve
 
 """ % (nome_arquivo))
 
-    with open('sys_solve_' + nome_arquivo + '.fbd', 'w') as file_out:
+    with open(nome_arquivo + '_sys_solve.fbd', 'w') as file_out:
         file_out.writelines('\n'.join(arquivo))
         file_out.close()
         pass
@@ -860,7 +860,7 @@ def main_func():
     grava_geo(nome_arquivo, dados_txt, tem_solo)
     executa_gmsh(nome_arquivo + '.geo', dados_txt)
     grava_fbd(nome_arquivo, dados_txt, tem_solo)
-    grava_solver(nome_arquivo, dados_txt, tipo_calculo)
+    grava_solver(nome_arquivo, dados_txt, tipo_calculo, tem_solo)
     executa_cgx(nome_arquivo + '.fbd')
     executa_ccx(nome_arquivo)
     converte_resultados(nome_arquivo, NomePastaResultados)
