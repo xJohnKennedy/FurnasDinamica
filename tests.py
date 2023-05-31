@@ -9,7 +9,7 @@ tem_solo = escolhe_solo(1)
 new_toml_string = toml.dumps(dados_txt)
 print(new_toml_string)
 
-nome_arquivo, NomePastaResultados = gerencia_pastas(
+nome_arquivo, NomePastaResultados, copia_msh = gerencia_pastas(
     nome_arquivo, tipo_calculo)
 
 grava_geo(nome_arquivo, dados_txt, tem_solo)

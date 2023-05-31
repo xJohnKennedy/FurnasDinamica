@@ -840,11 +840,15 @@ def gerencia_pastas(nome_arquivo: str, tipo_calculo: str, copia_msh: int = None)
                       ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
             pass
         elif os.name == 'posix':
-            KeyError()
-            os.system("mv -f %s*.* %s" % (nome_arquivo, NomePastaResultados))
-            os.system("mv -f *.msh %s" % (NomePastaResultados))
+            os.system("cp -f %s/*.msh ." %
+                      ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
             pass
+        copia_msh = True
         pass
+    else:
+        copia_msh = False
+        pass
+
 
     if os.path.exists(NomePastaResultados):
 
@@ -862,7 +866,7 @@ def gerencia_pastas(nome_arquivo: str, tipo_calculo: str, copia_msh: int = None)
 
     print(os.getcwd())
 
-    return nome_arquivo, NomePastaResultados
+    return nome_arquivo, NomePastaResultados, copia_msh
 
 
 def gerencia_arquivos(nome_arquivo: str, NomePastaResultados: str):
@@ -888,11 +892,13 @@ def main_func():
     new_toml_string = toml.dumps(dados_txt)
     print(new_toml_string)
 
-    nome_arquivo, NomePastaResultados = gerencia_pastas(
+    nome_arquivo, NomePastaResultados, copia_msh = gerencia_pastas(
         nome_arquivo, tipo_calculo)
 
     grava_geo(nome_arquivo, dados_txt, tem_solo)
-    executa_gmsh(nome_arquivo + '.geo', dados_txt)
+    if copia_msh:
+        executa_gmsh(nome_arquivo + '.geo', dados_txt)
+        pass
     grava_fbd(nome_arquivo, dados_txt, tem_solo)
     grava_solver(nome_arquivo, dados_txt, tipo_calculo, tem_solo)
     executa_cgx(nome_arquivo + '.fbd')
