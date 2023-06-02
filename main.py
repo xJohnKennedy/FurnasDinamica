@@ -84,7 +84,7 @@ def grava_geo(nome_arquivo, dados_txt, tem_solo: int = 0):
 
     # definicao das estacas
     # definicao das variaveis de geometria das estacas:
-    D_estq = dados_txt['estacas']['diam_est'] / 100
+    D_estq = dados_txt['estacas']['diam_est'] / 100 / 2
     H_estq = dados_txt['estacas']['h_est'] / 100
     n_estq = dados_txt['estacas']['num_est']
     cob_est = dados_txt['estacas']['cob_est']/100
