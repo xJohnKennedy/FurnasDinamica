@@ -426,7 +426,8 @@ S
         if tipo_calculo == "modal":
             arquivo.append("""** gravacao dos resultados
 *node file
-U""")
+U
+""")
             pass
 
         arquivo.append("""*end step
@@ -508,8 +509,8 @@ U""")
             pass
 
         arquivo.append("""*NODE FILE, NSET = Nall
-U, RF
-*EL FILE, ELSET = Eall, TOTALS = ONLY
+U, V, RF
+*EL FILE, TOTALS = ONLY
 ELSE, ELKE, EVOL
 *END STEP
 """ % ())
@@ -749,9 +750,15 @@ renderView1.CameraParallelScale = 16.695219357272986
 
     # executa pvbatch para tratar exportar resultados para txt
 
-    os.system('"C:\\Program Files\\ParaView 5.10.0-Windows-Python3.9-msvc2017-AMD64\\bin\\pvbatch.exe" %s'
-              % ('script_paraview.py'))
-    os.system('del /Q script_paraview.py')
+    if os.name == 'nt':
+        os.system('"C:\\Program Files\\ParaView 5.10.0-Windows-Python3.9-msvc2017-AMD64\\bin\\pvbatch.exe" %s'
+                  % ('script_paraview.py'))
+        os.system('del /Q script_paraview.py')
+        pass
+    elif os.name == 'posix':
+        os.system('pvbatch %s' % ('script_paraview.py'))
+        os.system('rm -f script_paraview.py')
+        pass
 
     pass
 
@@ -900,7 +907,10 @@ def main_func():
         pass
     grava_fbd(nome_arquivo, dados_txt, tem_solo)
     grava_solver(nome_arquivo, dados_txt, tipo_calculo, tem_solo)
-    executa_cgx(nome_arquivo + '.fbd')
+    if not copia_msh:
+        executa_cgx(nome_arquivo + '.fbd')
+        pass
+
     executa_ccx(nome_arquivo)
     converte_resultados(nome_arquivo, NomePastaResultados)
 
