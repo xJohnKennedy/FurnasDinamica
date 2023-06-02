@@ -849,7 +849,6 @@ def gerencia_pastas(nome_arquivo: str, tipo_calculo: str, copia_msh: int = None)
         copia_msh = False
         pass
 
-
     if os.path.exists(NomePastaResultados):
 
         apagar_pasta = input(
@@ -896,7 +895,7 @@ def main_func():
         nome_arquivo, tipo_calculo)
 
     grava_geo(nome_arquivo, dados_txt, tem_solo)
-    if copia_msh:
+    if not copia_msh:
         executa_gmsh(nome_arquivo + '.geo', dados_txt)
         pass
     grava_fbd(nome_arquivo, dados_txt, tem_solo)
