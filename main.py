@@ -756,7 +756,7 @@ renderView1.CameraParallelScale = 16.695219357272986
         os.system('del /Q script_paraview.py')
         pass
     elif os.name == 'posix':
-        os.system('pvbatch %s' % ('script_paraview.py'))
+        os.system('"pvbatch" %s' % ('script_paraview.py'))
         os.system('rm -f script_paraview.py')
         pass
 

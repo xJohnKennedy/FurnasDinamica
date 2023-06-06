@@ -28,8 +28,8 @@ titulo = "Radier Estaqueado"
 [estacas]
 
     num_est  =  15      # numero de estacas
-    diam_est =  30      # diametro das estacas (cm)
-    h_est    =  500     # altura das estacas (cm)
+    diam_est =  60      # diametro das estacas (cm)
+    h_est    =  712     # altura das estacas (cm)
     cob_est  =  200     # distancia da face de concreto ao eixo das estacas (cm)
 
 

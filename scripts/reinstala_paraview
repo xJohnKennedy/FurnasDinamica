@@ -1,0 +1,9 @@
+#!/bin/bash
+sudo apt remove paraview
+wget 'https://www.paraview.org/paraview-downloads/download.php?submit=Download&version=v5.11&type=binary&os=Linux&downloadFile=ParaView-5.11.0-MPI-Linux-Python3.9-x86_64.tar.gz'
+tar -xf download.php\?submit\=Download\&version\=v5.11\&type\=binary\&os\=Linux\&downloadFile\=ParaView-5.11.0-MPI-Linux-Python3.9-x86_64.tar.gz
+rm download.php\?submit\=Download\&version\=v5.11\&type\=binary\&os\=Linux\&downloadFile\=ParaView-5.11.0-MPI-Linux-Python3.9-x86_64.tar.gz
+cd ParaView-5.11.0-MPI-Linux-Python3.9-x86_64/
+cp -r bin/ lib/ plugins/ share/ ~/.local/
+cd ..
+rm -d -r ParaView-5.11.0-MPI-Linux-Python3.9-x86_64/
