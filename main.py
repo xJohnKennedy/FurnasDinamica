@@ -8,6 +8,20 @@ import numpy
 
 
 def adiciona_cone(arquivo, tag: integer,  x0, y0, z0, dx, dy, dz, r0, r1):
+    """Adiociona Cone() para o volume do cone do radier
+
+    Args:
+        arquivo (array): array que contem as strings para descrever o arquivo .geo 
+        tag (integer): tag 3D do cone
+        x0 (float): coordenada X do centro do circulo que está no primeiro plano do tronco de cone
+        y0 (float): coordenada Y do centro do circulo que está no primeiro plano do tronco de cone
+        z0 (float): coordenada Z do centro do circulo que está no primeiro plano do tronco de cone
+        dx (float): valor na direcao de X do vetor que descreve o centro do tronco de cone que está no segundo plano
+        dy (float): valor na direcao de Y do vetor que descreve o centro do tronco de cone que está no segundo plano
+        dz (float): valor na direcao de Z do vetor que descreve o centro do tronco de cone que está no segundo plano
+        r0 (float): valor do raio do circulo no primeiro plano
+        r1 (float): valor do raio do circulo no segundo plano
+    """
     # definicao do tronco de cone:
     arquivo.append('Cone(%i) = {%f, %f, %f, %f, %f, %f, %f, %f};'
                    % (tag,  x0, y0, z0, dx, dy, dz, r0, r1))
@@ -27,28 +41,80 @@ def cria_pontos_cargas(arquivo,  x0, y0, z0, r0, num_points):
 
 
 def adiciona_cilindro(arquivo, tag: integer,  x0, y0, z0, dx, dy, dz, r0, coment=""):
-    # definicao do tronco de cone:
+    """Adiociona Cylinder() para o volume do cilindro
+
+    Args:
+        arquivo (array): array que contem as strings para descrever o arquivo .geo 
+        tag (integer): tag 3D do cilindro
+        x0 (float): coordenada X do centro do circulo que está no primeiro plano do cilindro
+        y0 (float): coordenada Y do centro do circulo que está no primeiro plano do cilindro
+        z0 (float): coordenada Z do centro do circulo que está no primeiro plano do cilindro
+        dx (float): valor na direcao de X do vetor que descreve o centro do circulo que está no segundo plano
+        dy (float): valor na direcao de Y do vetor que descreve o centro do circulo que está no segundo plano
+        dz (float): valor na direcao de Z do vetor que descreve o centro do circulo que está no segundo plano
+        r0 (float): valor do raio do cilindro
+        coment (str, optional): comentario a ser inserido na linha do .geo. Defaults to "".
+    """
     arquivo.append('Cylinder(%i) = {%f, %f, %f, %f, %f, %f, %f};%s'
                    % (tag,  x0, y0, z0, dx, dy, dz, r0, coment))
     pass
 
 
 def adiciona_bloco_solo(arquivo, tag: integer,  x0, y0, z0, dx, dy, dz, coment=""):
-    # definicao do tronco de cone:
+    """Adiociona Box() para o volume do solo envolvente
+
+    Args:
+        arquivo (array): array que contem as strings para descrever o arquivo .geo 
+        tag (integer): tag 3D do solo
+        x0 (double): coordenada X do vertice inicial do paralelepipedo
+        y0 (_type_): coordenada Y do vertice inicial do paralelepipedo
+        z0 (_type_): coordenada Z do vertice inicial do paralelepipedo
+        dx (_type_): valor na direcao de X da aresta do paralelepipedo
+        dy (_type_): valor na direcao de Y da aresta do paralelepipedo
+        dz (_type_): valor na direcao de Z da aresta do paralelepipedo
+        coment (str, optional): comentario a ser inserido na linha do .geo. Defaults to "".
+    """
+
     arquivo.append('Box(%i) = {%f, %f, %f, %f, %f, %f}; %s'
                    % (tag,  x0, y0, z0, dx, dy, dz, coment))
     pass
 
 
 def lateral_cilindro_tag(tag: integer):
+    """Baseado na tag do cilindro, retorna a tag do plano que representa a lateral do cilindro
+
+    Args:
+        tag (integer): numero do cilindro
+
+    Returns:
+        int: tag do plano da lateral da estaca
+    """
     return (tag*3 - 2)
 
 
 def ponta_cilindro_tag(tag: integer):
+    """Baseado na tag do cilindro, retorna a tag do plano que representa a ponta de menor cota X,
+    assumindo que o vetor da direção do cilindro está na direção de -X
+    ** Usar essa funcao apenas para obter o plano da ponta da estaca em contato com o solo
+
+    Args:
+        tag (integer): numero do cilindro
+
+    Returns:
+        int: tag do plano da ponta da estaca
+    """
     return (tag*3 - 1)
 
 
-def grava_geo(nome_arquivo, dados_txt, tem_solo: int = 0):
+def grava_geo(nome_arquivo: str, dados_txt, tem_solo: int = 0):
+    """Formata e grava o arquivo .geo a ser interpretado pelo GMSH para geração
+    da geometria e malha do radier
+
+    Args:
+        nome_arquivo (str): nome do arquivo de configuracao lido, sem a extensao do formato
+        dados_txt (dictionary): dicionario {key:value} com o conteudo do arquivo toml lido
+        coment (int, optional): comentario a ser inserido na linha do .geo. Defaults to 0.
+    """
 
     # header .geo
     arquivo = [
@@ -183,6 +249,11 @@ def executa_gmsh(nome_arquivo, dados_txt):
 
 
 def executa_cgx(nome_arquivo):
+    """Executa CGX
+
+    Args:
+        nome_arquivo (str): nome do arquivo de configuracao lido, sem a extensao do formato
+    """
     if os.name == 'nt':
         comando = "cmd /c \"C:\\Program Files (x86)\\bConverged\\common\\site\\cmdStartup_mod.bat\" cgx -bg % s" % (
             nome_arquivo)
@@ -197,6 +268,12 @@ def executa_cgx(nome_arquivo):
 
 
 def executa_ccx(nome_arquivo: str):
+    """Grava arquivo e executa CCX
+
+    Args:
+        nome_arquivo (str): nome do arquivo de configuracao lido, sem a extensao do formato
+    """
+
     # header _cgx.geo
     arquivo = []
 
@@ -525,7 +602,13 @@ ELSE, ELKE, EVOL
     pass
 
 
-def converte_resultados(nome_arquivo: str, NomePastaResultados: str):
+def converte_resultados(nome_arquivo: str):
+    """Converte os resultados do arquido FRD do Calculix para o formato VTU do Paraview
+
+    Args:
+        nome_arquivo (str): nome do arquivo de configuracao lido, sem a extensao do formato
+    """
+
     arquivo = nome_arquivo + "_solve.frd"
     c = ccx2paraview.Converter(arquivo, ['vtu'])
     print("Convertendo arquivos para Paraview")
@@ -536,8 +619,25 @@ def converte_resultados(nome_arquivo: str, NomePastaResultados: str):
 
 
 def grava_resultados(nome_arquivo: str, NomePastaResultados: str, tipo_calculo: str):
+    """Abre o Paraview Server em formato de background, formata e salva o script a ser utilizado
+    na geracao dos resultados em formato txt, deleta o script
+
+    Args:
+        nome_arquivo (str): nome do arquivo de configuracao lido, sem a extensao do formato
+        NomePastaResultados (str): nome da pasta onde estao salvos os arquivos vtu a sererm lidos e processads pelo Paraview
+        tipo_calculo (str): tipo de calculo do processamento atual
+    """
+
     os.chdir(NomePastaResultados)
     print(os.getcwd())
+
+    # define caracter para acessar diretorios
+    if os.name == 'nt':
+        barraNomeArquivo = '\%s' % (nome_arquivo)
+        pass
+    elif os.name == 'posix':
+        barraNomeArquivo = '/%s' % (nome_arquivo)
+        pass
 
     if tipo_calculo == "estatico":
         arquivo = [
@@ -640,8 +740,8 @@ renderView1.CameraFocalPoint = [-1.434999942779541, 0.0, 0.0]
 renderView1.CameraViewUp = [0.8822946977651789, -
                             0.024212433113632765, -0.4700742753844009]
 renderView1.CameraParallelScale = 16.695219357272986
-""" % (nome_arquivo + '_solve', os.getcwd() + '\%s_solve.vtu' % (nome_arquivo),
-                os.getcwd() + '\%s_resultados.txt' % (nome_arquivo))]
+""" % (nome_arquivo + '_solve', os.getcwd() + '%s_solve.vtu' % (barraNomeArquivo),
+                os.getcwd() + '%s_resultados.txt' % (barraNomeArquivo))]
         pass
 
     if tipo_calculo == "modal":
@@ -739,8 +839,8 @@ layout1.SetSize(989, 494)
 renderView1.CameraPosition = [-1.434999942779541, 0.0, 64.50537421100464]
 renderView1.CameraFocalPoint = [-1.434999942779541, 0.0, 0.0]
 renderView1.CameraParallelScale = 16.695219357272986
-""" % (nome_arquivo + '_solve', os.getcwd() + '\%s_solve.pvd' % (nome_arquivo),
-                os.getcwd() + '\%s_resultados.txt' % (nome_arquivo))]
+""" % (nome_arquivo + '_solve', os.getcwd() + '%s_solve.pvd' % (barraNomeArquivo),
+                os.getcwd() + '%s_resultados.txt' % (barraNomeArquivo))]
         pass
 
     with open('script_paraview.py', 'w') as file_out:
@@ -760,10 +860,21 @@ renderView1.CameraParallelScale = 16.695219357272986
         os.system('rm -f script_paraview.py')
         pass
 
-    pass
+    return
 
 
 def ler_arquivo(nome_arquivo: str = None):
+    """Gerencia o nome do arquivo de configuracao no formato TOML a ser lido para o processamento
+
+    Args:
+        nome_arquivo (str, optional): se estiver definido, nao pergunta o nome do arquivo de configuracao.
+        Defaults to None.
+
+    Returns:
+        str: nome do arquivo de configuracao, com a extensao do formato lido
+        {key:value}: dicionario com o conteudo do arquivo toml lido
+
+    """
     if nome_arquivo == None:
         nome_arquivo = input(
             "Nome do arquivo a ser lido (incluir extensão, se houver): ")
@@ -777,6 +888,15 @@ def ler_arquivo(nome_arquivo: str = None):
 
 
 def escolhe_calculo(tipo_calculo: int = None):
+    """Gerencia escolha do tipo de calculo a ser executado no processamento atual
+
+    Args:
+        tipo_calculo (int, optional): se definido algum inteiro valido, nao pergunta ao usuario 
+        qual o tipo de calculo a ser executado. Defaults to None.
+
+    Returns:
+        tipo_calculo(str): retorna a string que contem o nome do tipo de calculo
+    """
 
     if tipo_calculo == None:
         print("\n\nQual tipo de calculo deseja executar?\n" +
@@ -803,6 +923,17 @@ def escolhe_calculo(tipo_calculo: int = None):
 
 
 def escolhe_solo(tem_solo: int = None):
+    """Gerenciamento se possui solo envolvente no modelo do radier
+
+    Args:
+        tem_solo (int, optional):
+        0: se nao possuir solo;
+        1: se possuir solo.
+        Defaults to None.
+
+    Returns:
+        int : retorna 0/1 se foi escolhido gerar o modelo com, ou sem, solo envolvente.
+    """
 
     if tem_solo == None:
         print("\n\nConsiderar solo envolvente?\n" +
@@ -876,6 +1007,12 @@ def gerencia_pastas(nome_arquivo: str, tipo_calculo: str, copia_msh: int = None)
 
 
 def gerencia_arquivos(nome_arquivo: str, NomePastaResultados: str):
+    """Gerencia manipulacao de arquivos apos o processamento terminar
+
+    Args:
+        nome_arquivo (str): nome do arquivo de configuracao TOML que gerou o processamento
+        NomePastaResultados (str): nome da pasta para onde os arquivos serao copiados
+    """
 
     if os.name == 'nt':
         os.system("move /Y %s*.* %s" % (nome_arquivo, NomePastaResultados))
@@ -889,6 +1026,8 @@ def gerencia_arquivos(nome_arquivo: str, NomePastaResultados: str):
 
 
 def main_func():
+    """Gerenciamento geral geral do processamento.
+    """
 
     nome_arquivo, dados_txt = ler_arquivo()
     tipo_calculo = escolhe_calculo()
@@ -912,6 +1051,7 @@ def main_func():
         pass
 
     executa_ccx(nome_arquivo)
+
     converte_resultados(nome_arquivo, NomePastaResultados)
 
     gerencia_arquivos(nome_arquivo, NomePastaResultados)
