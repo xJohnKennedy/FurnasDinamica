@@ -1052,7 +1052,7 @@ def main_func():
 
     executa_ccx(nome_arquivo)
 
-    converte_resultados(nome_arquivo, NomePastaResultados)
+    converte_resultados(nome_arquivo)
 
     gerencia_arquivos(nome_arquivo, NomePastaResultados)
 
