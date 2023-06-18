@@ -351,7 +351,7 @@ send solo abq
     pass
 
 
-def grava_solver(nome_arquivo: str, dados_txt, tipo_calculo: str, tem_solo: int = 0):
+def grava_solver(nome_arquivo: str, dados_txt, tipo_calculo: str, tem_solo: int = 0, copia_msh: bool = False):
     #####################################################
     # header _cgx.geo
     arquivo = [
@@ -490,7 +490,7 @@ S
     #####################################################
     # calculo da frequencia natural
 
-    if tipo_calculo == "modal" or tipo_calculo == "dinamico":
+    if tipo_calculo == "modal" or (tipo_calculo == "dinamico" and not copia_msh):
         arquivo.append("""** frequencia natural
 *step
 *frequency,solver=arpack,storage=yes
@@ -592,7 +592,7 @@ U
                 pass
             pass
 
-        arquivo.append("""*NODE FILE, NSET = Nall
+        arquivo.append("""*NODE FILE
 U, V, RF
 *EL FILE, TOTALS = ONLY
 ELSE, ELKE, EVOL
@@ -983,10 +983,18 @@ def gerencia_pastas(nome_arquivo: str, tipo_calculo: str, copia_msh: int = None)
         if os.name == 'nt':
             os.system("robocopy %s . *.msh" %
                       ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
+            if tipo_calculo == "dinamico":
+                os.system("robocopy %s . *.eig" %
+                          ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
+                pass
             pass
         elif os.name == 'posix':
             os.system("cp -f %s/*.msh ." %
                       ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
+            if tipo_calculo == "dinamico":
+                os.system("cp -f %s/*.eig ." %
+                          ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
+                pass
             pass
         copia_msh = True
         pass
@@ -1052,7 +1060,7 @@ def main_func():
         executa_gmsh(nome_arquivo + '.geo', dados_txt)
         pass
     grava_fbd(nome_arquivo, dados_txt, tem_solo)
-    grava_solver(nome_arquivo, dados_txt, tipo_calculo, tem_solo)
+    grava_solver(nome_arquivo, dados_txt, tipo_calculo, tem_solo, copia_msh)
     if not copia_msh:
         executa_cgx(nome_arquivo + '.fbd')
         pass
