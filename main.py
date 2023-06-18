@@ -383,11 +383,18 @@ def grava_solver(nome_arquivo: str, dados_txt, tipo_calculo: str, tem_solo: int 
 
     #####################################################
     # condicoes de contorno
-
-    arquivo.append("""** condicoes de contorno
-*boundary
-NLatEstacas,1 , 3, 0
-""" % ())
+    if tem_solo:
+        arquivo.append("""** condicoes de contorno
+    *boundary
+    NLatSolo,1 , 3, 0
+    """ % ())
+        pass
+    else:
+        arquivo.append("""** condicoes de contorno
+    *boundary
+    NLatEstacas,1 , 3, 0
+    """ % ())
+        pass
 
     #####################################################
     # definicao dos materiais do bloco e estacas
@@ -829,7 +836,7 @@ Hide(teste_modal_solvepvd, renderView1)
 renderView1.Update()
 
 SaveData(%r, proxy=generateGlobalIds1, WriteTimeSteps=1,
-    ChooseArraysToWrite=1,
+    WriteTimeStepsSeparately=1, ChooseArraysToWrite=1, 
     PointDataArrays=['GlobalPointIds', 'U', 'vtkGhostType'],
     CellDataArrays=['GlobalCellIds'])
 
@@ -851,7 +858,7 @@ renderView1.CameraParallelScale = 16.695219357272986
     # executa pvbatch para tratar exportar resultados para txt
 
     if os.name == 'nt':
-        os.system('"C:\\Program Files\\ParaView 5.10.0-Windows-Python3.9-msvc2017-AMD64\\bin\\pvbatch.exe" %s'
+        os.system('"C:\\Program Files\\ParaView 5.11.0\\bin\\pvbatch.exe" %s'
                   % ('script_paraview.py'))
         os.system('del /Q script_paraview.py')
         pass
