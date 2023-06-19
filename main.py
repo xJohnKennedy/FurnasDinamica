@@ -983,17 +983,25 @@ def gerencia_pastas(nome_arquivo: str, tipo_calculo: str, copia_msh: int = None)
         if os.name == 'nt':
             os.system("robocopy %s . *.msh" %
                       ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
-            if tipo_calculo == "dinamico":
+            if (tipo_calculo in ['dinamico']) and (copia_msh in [2, 3]):
                 os.system("robocopy %s . *.eig" %
                           ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
+                if tipo_calculo == 'dinamico' and copia_msh == 2:
+                    os.system("ren *.eig %s.eig" %
+                              (nome_arquivo_bruto + "_dinamico_solve"))
+                    pass
                 pass
             pass
         elif os.name == 'posix':
             os.system("cp -f %s/*.msh ." %
                       ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
-            if tipo_calculo == "dinamico":
+            if (tipo_calculo in ['dinamico']) and (copia_msh in [2, 3]):
                 os.system("cp -f %s/*.eig ." %
                           ("resultados_" + nome_arquivo_bruto + "_" + escolhe_calculo(copia_msh)))
+                if tipo_calculo == 'dinamico' and copia_msh == 2:
+                    os.system("mv *.eig %s.eig" %
+                              (nome_arquivo_bruto + "_dinamico_solve"))
+                    pass
                 pass
             pass
         copia_msh = True
